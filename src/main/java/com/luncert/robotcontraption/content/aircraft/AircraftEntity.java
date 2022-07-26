@@ -36,13 +36,13 @@ public class AircraftEntity extends Entity {
     private static final double MIN_MOVE_LENGTH = 1.0E-7D;
 
     private static final EntityDataAccessor<Integer> SPEED =
-            new EntityDataAccessor<>(AircraftEntity.class.hashCode(), EntityDataSerializers.INT);
+            new EntityDataAccessor<>(0, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> CLOCKWISE_ROTATION =
-            new EntityDataAccessor<>(AircraftEntity.class.hashCode(), EntityDataSerializers.BOOLEAN);
+            new EntityDataAccessor<>(1, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> WAITING_Y_ROT =
-            new EntityDataAccessor<>(AircraftEntity.class.hashCode(), EntityDataSerializers.FLOAT);
+            new EntityDataAccessor<>(2, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Optional<AircraftMovement>> WAITING_MOVEMENT =
-            new EntityDataAccessor<>(AircraftEntity.class.hashCode(), MOVEMENT_SERIALIZER);
+            new EntityDataAccessor<>(3, MOVEMENT_SERIALIZER);
 
     private BlockState blockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
 
