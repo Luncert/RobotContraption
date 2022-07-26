@@ -1,33 +1,58 @@
-package com.example.examplemod;
+package com.luncert.robotcontraption;
 
+import com.luncert.robotcontraption.config.Config;
+import com.luncert.robotcontraption.content.groups.ModGroup;
+import com.luncert.robotcontraption.content.index.RCBlocks;
+import com.luncert.robotcontraption.content.index.RCItems;
+import com.luncert.robotcontraption.content.index.RCTileEntities;
 import com.mojang.logging.LogUtils;
+import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.simibubi.create.repack.registrate.util.nullness.NonNullSupplier;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
 import org.slf4j.Logger;
 
 import java.util.stream.Collectors;
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod("examplemod")
-public class ExampleMod
+@Mod(Reference.MOD_ID)
+public class RobotContraption
 {
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public ExampleMod()
+    private static final NonNullSupplier<CreateRegistrate> REGISTRATE = CreateRegistrate.lazy(Reference.MOD_ID);
+
+    private static final String PROTOCOL = "1";
+    public static final SimpleChannel Network = NetworkRegistry.ChannelBuilder.named(new ResourceLocation(Reference.MOD_ID, "main"))
+            .clientAcceptedVersions(PROTOCOL::equals)
+            .serverAcceptedVersions(PROTOCOL::equals)
+            .networkProtocolVersion(() -> PROTOCOL)
+            .simpleChannel();
+
+    public RobotContraption()
     {
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
         // Register the enqueueIMC method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
         // Register the processIMC method for modloading
@@ -35,6 +60,16 @@ public class ExampleMod
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
+
+        // register config and load config from file
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG);
+        Config.loadConfig(Config.COMMON_CONFIG, FMLPaths.CONFIGDIR.get().resolve("robotcontraption-common.toml"));
+
+        new ModGroup("main");
+
+        RCBlocks.register();
+        RCTileEntities.register();
+        RCItems.register();
     }
 
     private void setup(final FMLCommonSetupEvent event)
@@ -42,6 +77,15 @@ public class ExampleMod
         // some preinit code
         LOGGER.info("HELLO FROM PREINIT");
         LOGGER.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
+    }
+
+    private void doClientStuff(final FMLClientSetupEvent event) {
+        // event.enqueueWork(CAPonder::register);
+        // event.enqueueWork(CAItemProperties::register);
+
+        RenderType cutout = RenderType.cutoutMipped();
+
+        // ItemBlockRenderTypes.setRenderLayer(CABlocks.TESLA_COIL.get(), cutout);
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event)
@@ -77,5 +121,9 @@ public class ExampleMod
             // Register a new block here
             LOGGER.info("HELLO from Register Block");
         }
+    }
+
+    public static CreateRegistrate registrate() {
+        return REGISTRATE.get();
     }
 }
