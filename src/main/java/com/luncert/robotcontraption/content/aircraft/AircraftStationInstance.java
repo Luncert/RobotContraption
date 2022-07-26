@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.content.robot;
+package com.luncert.robotcontraption.content.aircraft;
 
 import com.jozufozu.flywheel.api.Instancer;
 import com.jozufozu.flywheel.api.MaterialManager;
@@ -9,9 +9,9 @@ import com.simibubi.create.content.contraptions.base.flwdata.RotatingData;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
-public class RobotStationInstance extends SingleRotatingInstance {
+public class AircraftStationInstance extends SingleRotatingInstance {
 
-    public RobotStationInstance(MaterialManager modelManager, KineticTileEntity tile) {
+    public AircraftStationInstance(MaterialManager modelManager, KineticTileEntity tile) {
         super(modelManager, tile);
     }
 

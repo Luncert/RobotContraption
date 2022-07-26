@@ -17,6 +17,6 @@ public class ModGroup extends CreativeModeTab {
 
     @Override
     public ItemStack makeIcon() {
-        return new ItemStack(RCBlocks.ROBOT_STATION.get());
+        return new ItemStack(RCBlocks.AIRCRAFT_STATION.get());
     }
 }

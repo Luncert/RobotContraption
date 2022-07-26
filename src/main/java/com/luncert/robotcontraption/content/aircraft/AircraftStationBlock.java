@@ -1,5 +1,6 @@
-package com.luncert.robotcontraption.content.robot;
+package com.luncert.robotcontraption.content.aircraft;
 
+import com.luncert.robotcontraption.content.index.RCBlocks;
 import com.luncert.robotcontraption.content.index.RCShapes;
 import com.luncert.robotcontraption.content.index.RCTileEntities;
 import com.simibubi.create.content.contraptions.base.HorizontalKineticBlock;
@@ -16,14 +17,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class RobotStationBlock extends HorizontalKineticBlock implements ITE<RobotStationTileEntity> {
+public class AircraftStationBlock extends HorizontalKineticBlock implements ITE<AircraftStationTileEntity> {
 
     public static final VoxelShaper ROBOT_STATION_SHAPE = RCShapes
             .shape(0, 0, 1, 16, 15, 14)
             .add(0, 0, 14, 16, 16, 16)
             .forDirectional();
 
-    public RobotStationBlock(Properties properties) {
+    public AircraftStationBlock(Properties properties) {
         super(properties);
     }
 
@@ -42,7 +43,7 @@ public class RobotStationBlock extends HorizontalKineticBlock implements ITE<Rob
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return RCTileEntities.ROBOT_STATION.create(pos, state);
+        return RCTileEntities.AIRCRAFT_STATION.create(pos, state);
     }
 
     @Override
@@ -51,13 +52,13 @@ public class RobotStationBlock extends HorizontalKineticBlock implements ITE<Rob
     }
 
     @Override
-    public Class<RobotStationTileEntity> getTileEntityClass() {
-        return RobotStationTileEntity.class;
+    public Class<AircraftStationTileEntity> getTileEntityClass() {
+        return AircraftStationTileEntity.class;
     }
 
     @Override
-    public BlockEntityType<? extends RobotStationTileEntity> getTileEntityType() {
-        return RCTileEntities.ROBOT_STATION.get();
+    public BlockEntityType<? extends AircraftStationTileEntity> getTileEntityType() {
+        return RCTileEntities.AIRCRAFT_STATION.get();
     }
 
     @Override
@@ -65,4 +66,9 @@ public class RobotStationBlock extends HorizontalKineticBlock implements ITE<Rob
         return face == state.getValue(HORIZONTAL_FACING);
     }
 
+    // contraption anchor
+
+    public static BlockState createAnchor(BlockState state) {
+        return RCBlocks.AIRCRAFT_ANCHOR.getDefaultState();
+    }
 }

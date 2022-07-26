@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.compat.computercraft;
 
-import com.luncert.robotcontraption.content.robot.RobotStationTileEntity;
+import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
 import net.minecraftforge.common.capabilities.Capability;
 
 import static dan200.computercraft.shared.Capabilities.CAPABILITY_PERIPHERAL;
@@ -11,7 +11,7 @@ public class Peripherals {
         return cap == CAPABILITY_PERIPHERAL;
     }
 
-    public static RobotStationPeripheral createRobotStationPeripheral(RobotStationTileEntity te) {
-        return new RobotStationPeripheral("robot_station", te);
+    public static AircraftStationPeripheral createRobotStationPeripheral(AircraftStationTileEntity te) {
+        return new AircraftStationPeripheral("aircraft_station", te);
     }
 }

@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.content.robot;
+package com.luncert.robotcontraption.content.aircraft;
 
 import com.simibubi.create.AllBlockPartials;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
@@ -8,9 +8,9 @@ import com.simibubi.create.foundation.render.SuperByteBuffer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class RobotStationRenderer extends KineticTileEntityRenderer {
+public class AircraftStationRenderer extends KineticTileEntityRenderer {
 
-    public RobotStationRenderer(BlockEntityRendererProvider.Context context) {
+    public AircraftStationRenderer(BlockEntityRendererProvider.Context context) {
         super(context);
     }
 

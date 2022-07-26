@@ -3,6 +3,7 @@ package com.luncert.robotcontraption;
 import com.luncert.robotcontraption.config.Config;
 import com.luncert.robotcontraption.content.groups.ModGroup;
 import com.luncert.robotcontraption.content.index.RCBlocks;
+import com.luncert.robotcontraption.content.index.RCEntityTypes;
 import com.luncert.robotcontraption.content.index.RCItems;
 import com.luncert.robotcontraption.content.index.RCTileEntities;
 import com.mojang.logging.LogUtils;
@@ -70,6 +71,7 @@ public class RobotContraption
         RCBlocks.register();
         RCTileEntities.register();
         RCItems.register();
+        RCEntityTypes.register();
     }
 
     private void setup(final FMLCommonSetupEvent event)

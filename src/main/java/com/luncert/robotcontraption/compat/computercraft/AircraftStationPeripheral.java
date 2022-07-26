@@ -1,6 +1,8 @@
 package com.luncert.robotcontraption.compat.computercraft;
 
-import com.luncert.robotcontraption.content.robot.RobotStationTileEntity;
+import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
+import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.peripheral.IComputerAccess;
@@ -9,16 +11,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class RobotStationPeripheral implements IPeripheral {
+public class AircraftStationPeripheral implements IPeripheral {
 
     protected String type;
-    protected RobotStationTileEntity tileEntity;
+    protected AircraftStationTileEntity tileEntity;
 
     protected final List<IComputerAccess> connected = new ArrayList<>();
 
-    public RobotStationPeripheral(String type, RobotStationTileEntity tileEntity) {
+    public AircraftStationPeripheral(String type, AircraftStationTileEntity tileEntity) {
         this.type = type;
         this.tileEntity = tileEntity;
     }
@@ -56,10 +59,37 @@ public class RobotStationPeripheral implements IPeripheral {
     // api
 
     @LuaFunction
+    public final void assemble(String rotationMode) throws LuaException {
+        AircraftMovementMode mode;
+        try {
+            mode = AircraftMovementMode.valueOf(rotationMode);
+        }catch (IllegalArgumentException e) {
+            throw new LuaException("Invalid mode, must be one of " + Arrays.toString(AircraftMovementMode.values()));
+        }
+
+        if (tileEntity != null) {
+            try {
+                tileEntity.assemble(mode);
+            } catch (AssemblyException e) {
+                e.printStackTrace();
+                throw new LuaException("failed to assemble structure: " + e.getMessage());
+            }
+        }
+    }
+
+    @LuaFunction
+    public final void dissemble() {
+        if (tileEntity != null) {
+            tileEntity.dissemble();
+        }
+    }
+
+    @LuaFunction
     public final void setSpeed(int rpm) throws LuaException {
         if(rpm == getSpeed()) {
             return;
         }
+
         if(tileEntity != null) {
             if(!tileEntity.setRPM(rpm)) {
                 throw new LuaException("Speed is set too many times per second (Anti Spam).");

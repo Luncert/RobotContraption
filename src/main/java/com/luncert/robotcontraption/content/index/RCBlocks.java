@@ -1,9 +1,9 @@
 package com.luncert.robotcontraption.content.index;
 
 import com.luncert.robotcontraption.RobotContraption;
-import com.luncert.robotcontraption.config.Config;
 import com.luncert.robotcontraption.content.groups.ModGroup;
-import com.luncert.robotcontraption.content.robot.RobotStationBlock;
+import com.luncert.robotcontraption.content.aircraft.AircraftAnchorBlock;
+import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.AllSections;
@@ -20,7 +20,7 @@ public class RCBlocks {
     private static final CreateRegistrate REGISTRATE = RobotContraption.registrate()
             .creativeModeTab(() -> ModGroup.MAIN);
 
-    public static final BlockEntry<RobotStationBlock> ROBOT_STATION = REGISTRATE.block("robot_station", RobotStationBlock::new)
+    public static final BlockEntry<AircraftStationBlock> AIRCRAFT_STATION = REGISTRATE.block("aircraft_station", AircraftStationBlock::new)
             .initialProperties(SharedProperties::stone)
             .tag(AllTags.AllBlockTags.SAFE_NBT.tag) //Dono what this tag means (contraption safe?).
             .transform(BlockStressDefaults.setImpact(512 / 256d))
@@ -28,7 +28,14 @@ public class RCBlocks {
             .transform(customItemModel())
             .register();
 
+    public static final BlockEntry<AircraftAnchorBlock> AIRCRAFT_ANCHOR =
+            REGISTRATE.block("aircraft_anchor", AircraftAnchorBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .blockstate((c, p) -> p.simpleBlock(c.get(), p.models()
+                            .getExistingFile(p.modLoc("block/aircraft/" + c.getName()))))
+                    .register();
+
     public static void register() {
-        Create.registrate().addToSection(ROBOT_STATION, AllSections.KINETICS);
+        Create.registrate().addToSection(AIRCRAFT_STATION, AllSections.KINETICS);
     }
 }
