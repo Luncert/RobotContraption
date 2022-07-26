@@ -3,14 +3,20 @@ package com.luncert.robotcontraption.compat.computercraft;
 import com.luncert.robotcontraption.content.robot.RobotStationTileEntity;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
+import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RobotStationPeripheral implements IPeripheral {
 
     protected String type;
     protected RobotStationTileEntity tileEntity;
+
+    protected final List<IComputerAccess> connected = new ArrayList<>();
 
     public RobotStationPeripheral(String type, RobotStationTileEntity tileEntity) {
         this.type = type;
@@ -31,6 +37,20 @@ public class RobotStationPeripheral implements IPeripheral {
     @Override
     public boolean equals(@Nullable IPeripheral iPeripheral) {
         return iPeripheral == this;
+    }
+
+    @Override
+    public void attach(IComputerAccess computer) {
+        connected.add(computer);
+    }
+
+    @Override
+    public void detach(IComputerAccess computer) {
+        connected.remove(computer);
+    }
+
+    public List<IComputerAccess> getConnectedComputers() {
+        return connected;
     }
 
     // api
