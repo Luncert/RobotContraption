@@ -9,15 +9,15 @@ import java.util.Arrays;
 
 public class AircraftApiCallback implements ILuaCallback {
 
-    private final int command;
+    private final int executionId;
     private final MethodResult callbackHook;
 
-    public static MethodResult hook(int commandID, String respEventName) {
-        return new AircraftApiCallback(commandID, respEventName).callbackHook;
+    public static MethodResult hook(int executionId, String respEventName) {
+        return new AircraftApiCallback(executionId, respEventName).callbackHook;
     }
 
-    private AircraftApiCallback(int command, String respEventName) {
-        this.command = command;
+    private AircraftApiCallback(int executionId, String respEventName) {
+        this.executionId = executionId;
         callbackHook = MethodResult.pullEvent(respEventName, this);
     }
 
@@ -25,7 +25,7 @@ public class AircraftApiCallback implements ILuaCallback {
     @Override
     public MethodResult resume(Object[] response) throws LuaException {
         if (response.length >= 3 && response[1] instanceof Number && response[2] instanceof Boolean) {
-            return ((Number) response[1]).intValue() != this.command ?
+            return ((Number) response[1]).intValue() != this.executionId ?
                     callbackHook : MethodResult.of(Arrays.copyOfRange(response, 2, response.length));
         } else {
             return callbackHook;

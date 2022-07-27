@@ -7,10 +7,10 @@ import com.luncert.robotcontraption.content.index.RCBlocks;
 import com.luncert.robotcontraption.content.index.RCEntityTypes;
 import com.luncert.robotcontraption.content.util.Common;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
+import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.mojang.math.Vector3d;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import com.simibubi.create.content.contraptions.components.structureMovement.OrientedContraptionEntity;
-import com.simibubi.create.foundation.advancement.AllAdvancements;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -31,7 +31,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
+import java.util.ArrayDeque;
 import java.util.Optional;
+import java.util.Queue;
 
 import static com.luncert.robotcontraption.content.aircraft.AircraftMovement.MOVEMENT_SERIALIZER;
 import static com.simibubi.create.content.contraptions.base.HorizontalKineticBlock.HORIZONTAL_FACING;
@@ -50,6 +52,10 @@ public class AircraftEntity extends Entity {
             new EntityDataAccessor<>(251, MOVEMENT_SERIALIZER);
 
     private BlockState blockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
+
+    private final Queue<AircraftEntityActionCallback> asyncCallbacks = new ArrayDeque<>();
+    private boolean isRotating;
+    private boolean isMoving;
 
     private float deltaRotation;
 
@@ -71,6 +77,12 @@ public class AircraftEntity extends Entity {
         this.blockState = blockState;
         // following data will be synced automatically
         setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
+
+        SimpleDirection blockDirection = SimpleDirection.valueOf(blockState.getValue(HORIZONTAL_FACING).getName().toUpperCase());
+        SimpleDirection direction = getSimpleDirection();
+        setYRot(blockDirection.getDegree() - direction.getDegree());
+        System.out.println(blockDirection.getDegree() - direction.getDegree());
+
         setDeltaMovement(Vec3.ZERO);
     }
 
@@ -122,6 +134,60 @@ public class AircraftEntity extends Entity {
 
         // OrientedContraptionEntity contraption = (OrientedContraptionEntity) entity;
     }
+
+    public void forward(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
+        if (isActive()) {
+            throw new AircraftMovementException("cannot_update_moving_aircraft");
+        }
+
+        SimpleDirection direction = getSimpleDirection();
+        Direction.Axis axis = direction.getAxis();
+        int posDelta = direction.isPositive() ? n : -n;
+        setWaitingMovement(new AircraftMovement(axis, direction.isPositive(),
+                blockPosition().get(axis) + .5f + posDelta));
+        isMoving = true;
+        asyncCallbacks.add(callback);
+    }
+
+
+    public void rotate(int degree, AircraftEntityActionCallback callback) throws AircraftMovementException {
+        if (isActive()) {
+            throw new AircraftMovementException("cannot_update_moving_aircraft");
+        }
+
+        float yRot = getYRot();
+        float waitingYRot = wrapDegrees(yRot + degree);
+        setWaitingYRot(waitingYRot);
+        if (degree > 0) {
+            if (waitingYRot < yRot) {
+                setYRot(-180);
+            }
+        } else {
+            if (waitingYRot > yRot) {
+                setYRot(180);
+            }
+        }
+        isRotating = true;
+        asyncCallbacks.add(callback);
+    }
+
+    private boolean isActive() {
+        return isRotating || isMoving;
+    }
+
+    // private boolean isRotating() {
+    //     return getYRot() != getWaitingYRot();
+    // }
+    //
+    // private boolean isMoving() {
+    //     Optional<AircraftMovement> opt = getWaitingMovement();
+    //     if (opt.isPresent()) {
+    //         AircraftMovement movement = opt.get();
+    //         double v = position().get(movement.axis);
+    //         return v != movement.expectedPos;
+    //     }
+    //     return false;
+    // }
 
     @OnlyIn(Dist.CLIENT)
     public void lerpTo(double lerpX, double lerpY, double lerpZ, float lerpYRot, float lerpXRot,
@@ -190,6 +256,10 @@ public class AircraftEntity extends Entity {
                     Vector3d pos = Common.set(position(), movement.axis, movement.expectedPos);
                     setPos(pos.x, pos.y, pos.z);
                     setWaitingMovement(null);
+                    if (isMoving) {
+                        asyncCallbacks.remove().accept(true);
+                    }
+                    isMoving = false;
                 }
             });
         }
@@ -202,6 +272,10 @@ public class AircraftEntity extends Entity {
         }
 
         deltaRotation = 0;
+        if (isRotating) {
+            asyncCallbacks.remove().accept(true);
+        }
+        isRotating = false;
         return false;
     }
 
@@ -220,6 +294,10 @@ public class AircraftEntity extends Entity {
         }
 
         setDeltaMovement(Vec3.ZERO);
+        if (isMoving) {
+            asyncCallbacks.remove().accept(true);
+        }
+        isMoving = false;
         return false;
     }
 

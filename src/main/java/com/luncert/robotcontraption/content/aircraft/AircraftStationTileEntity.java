@@ -1,12 +1,13 @@
 package com.luncert.robotcontraption.content.aircraft;
 
+import com.luncert.robotcontraption.compat.computercraft.AircraftActionEvent;
 import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.config.Config;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
+import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -62,6 +63,14 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
         }
 
         entity.dissemble();
+    }
+
+    public void forward(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
+        entity.forward(n, callback);
+    }
+
+    public void rotate(int degree, AircraftEntityActionCallback callback) throws AircraftMovementException {
+        entity.rotate(degree, callback);
     }
 
     public boolean setRPM(int rpm) {

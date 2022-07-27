@@ -3,6 +3,7 @@ package com.luncert.robotcontraption.compat.computercraft;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
+import com.luncert.robotcontraption.exception.AircraftMovementException;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.lua.MethodResult;
@@ -19,12 +20,19 @@ public class AircraftStationPeripheral implements IPeripheral {
 
     protected String type;
     protected AircraftStationTileEntity tileEntity;
+    private int executionId;
 
     protected final List<IComputerAccess> connected = new ArrayList<>();
 
     public AircraftStationPeripheral(String type, AircraftStationTileEntity tileEntity) {
         this.type = type;
         this.tileEntity = tileEntity;
+    }
+
+    public void queueEvent(String event, Object... args) {
+        for (IComputerAccess computer : connected) {
+            computer.queueEvent(event, args);
+        }
     }
 
     @Override
@@ -96,10 +104,36 @@ public class AircraftStationPeripheral implements IPeripheral {
             throw new LuaException("speed is zero");
         }
 
+        int executionId = this.executionId++;
         if (tileEntity != null) {
-            // tileEntity.forward(n);
+            try {
+                tileEntity.forward(n,
+                        success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, success));
+            } catch (AircraftMovementException e) {
+                throw new LuaException(e.getMessage());
+            }
         }
-        return null;
+
+        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE);
+    }
+
+    @LuaFunction
+    public final MethodResult rotate(int degree) throws LuaException {
+        if (getSpeed() == 0) {
+            throw new LuaException("speed is zero");
+        }
+
+        int executionId = this.executionId++;
+        if (tileEntity != null) {
+            try {
+                tileEntity.rotate(degree,
+                        success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE, executionId, success));
+            } catch (AircraftMovementException e) {
+                throw new LuaException(e.getMessage());
+            }
+        }
+
+        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE);
     }
 
     @LuaFunction

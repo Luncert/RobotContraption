@@ -4,17 +4,19 @@ import net.minecraft.core.Direction.Axis;
 
 public enum SimpleDirection {
 
-    SOUTH(false, true),
-    WEST(true, false),
-    NORTH(true, true),
-    EAST(false, false);
+    SOUTH(false, true, 180),
+    WEST(true, false, 270),
+    NORTH(true, true, 0),
+    EAST(false, false, 90);
 
     private final boolean positive;
     private final boolean inZAxis;
+    private final int degree;
 
-    SimpleDirection(boolean positive, boolean inZAxis) {
+    SimpleDirection(boolean positive, boolean inZAxis, int degree) {
         this.positive = positive;
         this.inZAxis = inZAxis;
+        this.degree = degree;
     }
 
     public boolean inZAxis() {
@@ -51,5 +53,9 @@ public enum SimpleDirection {
 
     public int getDirectionFactor() {
         return positive ? 1 : -1;
+    }
+
+    public int getDegree() {
+        return degree;
     }
 }
