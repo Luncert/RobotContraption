@@ -9,6 +9,7 @@ import com.luncert.robotcontraption.content.util.Common;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.mojang.math.Vector3d;
+import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import com.simibubi.create.content.contraptions.components.structureMovement.OrientedContraptionEntity;
 import net.minecraft.core.BlockPos;
@@ -488,7 +489,10 @@ public class AircraftEntity extends Entity {
 
             OrientedContraptionEntity structure = (OrientedContraptionEntity) rider;
             // System.out.println((level.isClientSide ? "C" : "S") + getYRot() + "  " + structure.yaw);
-            structure.startAtYaw((getYRot() + 180) % 360);
+            if (!level.isClientSide) {
+                System.out.println(structure.yaw);
+            }
+            structure.startAtYaw((structure.yaw + deltaRotation) % 360);
 
             // let rider rotate with robot
             // rider.setYRot(this.deltaRotation);

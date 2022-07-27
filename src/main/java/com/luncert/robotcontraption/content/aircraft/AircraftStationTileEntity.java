@@ -44,6 +44,10 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
     // api
 
     public void assemble(AircraftMovementMode mode) throws AircraftAssemblyException {
+        if (entity != null) {
+            throw new AircraftAssemblyException("aircraft_assembled");
+        }
+
         AircraftEntity aircraft = new AircraftEntity(level, worldPosition, getBlockState());
         level.addFreshEntity(aircraft);
         aircraft.assemble(worldPosition, mode);
@@ -52,7 +56,7 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
 
     public void dissemble() throws AircraftAssemblyException {
         if (entity == null) {
-            throw new AircraftAssemblyException("entity_missing");
+            throw new AircraftAssemblyException("aircraft_dissembled");
         }
 
         Vec3 blockPos = Vec3.atCenterOf(getBlockPos()).add(0, -0.5, 0);
@@ -65,15 +69,24 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
         entity.dissemble();
     }
 
-    public void forward(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
+    public void forward(int n, AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+        if (entity == null) {
+            throw new AircraftAssemblyException("aircraft_dissembled");
+        }
         entity.forward(n, callback);
     }
 
-    public void turnLeft(AircraftEntityActionCallback callback) throws AircraftMovementException {
+    public void turnLeft(AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+        if (entity == null) {
+            throw new AircraftAssemblyException("aircraft_dissembled");
+        }
         entity.rotate(-90, callback);
     }
 
-    public void turnRight(AircraftEntityActionCallback callback) throws AircraftMovementException {
+    public void turnRight(AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+        if (entity == null) {
+            throw new AircraftAssemblyException("aircraft_dissembled");
+        }
         entity.rotate(90, callback);
     }
 

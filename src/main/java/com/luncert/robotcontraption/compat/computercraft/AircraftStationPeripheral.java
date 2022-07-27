@@ -109,7 +109,7 @@ public class AircraftStationPeripheral implements IPeripheral {
             try {
                 tileEntity.forward(n,
                         success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, success));
-            } catch (AircraftMovementException e) {
+            } catch (AircraftMovementException | AircraftAssemblyException e) {
                 throw new LuaException(e.getMessage());
             }
         }
@@ -127,7 +127,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         if (tileEntity != null) {
             try {
                 tileEntity.turnLeft(success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE, executionId, success));
-            } catch (AircraftMovementException e) {
+            } catch (AircraftMovementException | AircraftAssemblyException e) {
                 throw new LuaException(e.getMessage());
             }
         }
@@ -145,7 +145,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         if (tileEntity != null) {
             try {
                 tileEntity.turnRight(success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE, executionId, success));
-            } catch (AircraftMovementException e) {
+            } catch (AircraftMovementException | AircraftAssemblyException e) {
                 throw new LuaException(e.getMessage());
             }
         }
