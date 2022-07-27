@@ -1,5 +1,6 @@
 package com.luncert.robotcontraption.content.index;
 
+import com.luncert.robotcontraption.Reference;
 import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.content.groups.ModGroup;
 import com.luncert.robotcontraption.content.aircraft.AircraftAnchorBlock;
@@ -11,6 +12,7 @@ import com.simibubi.create.foundation.block.BlockStressDefaults;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.simibubi.create.repack.registrate.util.entry.BlockEntry;
+import net.minecraft.resources.ResourceLocation;
 
 import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
 
@@ -32,7 +34,7 @@ public class RCBlocks {
             REGISTRATE.block("aircraft_anchor", AircraftAnchorBlock::new)
                     .initialProperties(SharedProperties::stone)
                     .blockstate((c, p) -> p.simpleBlock(c.get(), p.models()
-                            .getExistingFile(p.modLoc("block/aircraft/" + c.getName()))))
+                            .getExistingFile(p.modLoc("block/aircraft_station/" + c.getName()))))
                     .register();
 
     public static void register() {

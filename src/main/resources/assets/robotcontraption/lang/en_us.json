@@ -1,0 +1,4 @@
+{
+  "robotcontraption.gui.assembly.exception.entity_missing": "entity not found",
+  "robotcontraption.gui.assembly.exception.not_dissemble_at_station": "aircraft can only dissemble at aircraft station"
+}

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "robotcontraption:block/aircraft_station/aircraft_anchor"
+    }
+  }
+}

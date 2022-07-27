@@ -2,9 +2,10 @@ package com.luncert.robotcontraption.compat.computercraft;
 
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
+import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
+import dan200.computercraft.api.lua.MethodResult;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import org.jetbrains.annotations.NotNull;
@@ -70,7 +71,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         if (tileEntity != null) {
             try {
                 tileEntity.assemble(mode);
-            } catch (AssemblyException e) {
+            } catch (AircraftAssemblyException e) {
                 e.printStackTrace();
                 throw new LuaException("failed to assemble structure: " + e.getMessage());
             }
@@ -78,10 +79,27 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public final void dissemble() {
+    public final void dissemble() throws LuaException {
         if (tileEntity != null) {
-            tileEntity.dissemble();
+            try {
+                tileEntity.dissemble();
+            } catch (AircraftAssemblyException e) {
+                e.printStackTrace();
+                throw new LuaException("failed to dissemble structure: " + e.getMessage());
+            }
         }
+    }
+
+    @LuaFunction
+    public final MethodResult forward(int n) throws LuaException {
+        if (getSpeed() == 0) {
+            throw new LuaException("speed is zero");
+        }
+
+        if (tileEntity != null) {
+            // tileEntity.forward(n);
+        }
+        return null;
     }
 
     @LuaFunction

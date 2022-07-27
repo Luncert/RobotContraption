@@ -4,12 +4,14 @@ import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripher
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.config.Config;
+import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -18,6 +20,7 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
     private static final Integer RPM_RANGE = Config.ROBOT_RPM_RANGE.get();
 
     private LazyOptional<AircraftStationPeripheral> peripheral;
+    private AircraftEntity entity;
 
     // create
 
@@ -39,14 +42,26 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
 
     // api
 
-    public void assemble(AircraftMovementMode mode) throws AssemblyException {
-        AircraftEntity aircraft = new AircraftEntity(level, getBlockState());
+    public void assemble(AircraftMovementMode mode) throws AircraftAssemblyException {
+        AircraftEntity aircraft = new AircraftEntity(level, worldPosition, getBlockState());
         level.addFreshEntity(aircraft);
-        aircraft.assembleStructure(worldPosition);
+        aircraft.assemble(worldPosition);
+        this.entity = aircraft;
     }
 
-    public void dissemble() {
+    public void dissemble() throws AircraftAssemblyException {
+        if (entity == null) {
+            throw new AircraftAssemblyException("entity_missing");
+        }
 
+        Vec3 blockPos = Vec3.atCenterOf(getBlockPos()).add(0, -0.5, 0);
+        if (!blockPos.equals(entity.position())) {
+            System.out.println(blockPos);
+            System.out.println(entity.position());
+            throw new AircraftAssemblyException("not_dissemble_at_station");
+        }
+
+        entity.dissemble();
     }
 
     public boolean setRPM(int rpm) {

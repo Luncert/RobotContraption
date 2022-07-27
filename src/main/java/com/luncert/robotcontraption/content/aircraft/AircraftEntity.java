@@ -5,6 +5,7 @@ import com.luncert.robotcontraption.content.common.SimpleDirection;
 import com.luncert.robotcontraption.content.index.RCBlocks;
 import com.luncert.robotcontraption.content.index.RCEntityTypes;
 import com.luncert.robotcontraption.content.util.Common;
+import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.mojang.math.Vector3d;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import com.simibubi.create.content.contraptions.components.structureMovement.OrientedContraptionEntity;
@@ -12,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.tags.BlockTags;
@@ -19,7 +21,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
@@ -30,19 +31,20 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 import static com.luncert.robotcontraption.content.aircraft.AircraftMovement.MOVEMENT_SERIALIZER;
+import static com.simibubi.create.content.contraptions.base.HorizontalKineticBlock.HORIZONTAL_FACING;
 
 public class AircraftEntity extends Entity {
 
     private static final double MIN_MOVE_LENGTH = 1.0E-7D;
 
     private static final EntityDataAccessor<Integer> SPEED =
-            new EntityDataAccessor<>(0, EntityDataSerializers.INT);
+            new EntityDataAccessor<>(254, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> CLOCKWISE_ROTATION =
-            new EntityDataAccessor<>(1, EntityDataSerializers.BOOLEAN);
+            new EntityDataAccessor<>(253, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> WAITING_Y_ROT =
-            new EntityDataAccessor<>(2, EntityDataSerializers.FLOAT);
+            new EntityDataAccessor<>(252, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Optional<AircraftMovement>> WAITING_MOVEMENT =
-            new EntityDataAccessor<>(3, MOVEMENT_SERIALIZER);
+            new EntityDataAccessor<>(251, MOVEMENT_SERIALIZER);
 
     private BlockState blockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
 
@@ -58,28 +60,34 @@ public class AircraftEntity extends Entity {
     // for client
     public AircraftEntity(EntityType<?> entity, Level world) {
         super(entity, world);
-        initBasicProps();
     }
 
-    // TODO for server
-    public AircraftEntity(Level world, BlockState blockState) {
+    // for server
+    public AircraftEntity(Level world, BlockPos pos, BlockState blockState) {
         super(RCEntityTypes.AIRCRAFT.get(), world);
         this.blockState = blockState;
-        initBasicProps();
+        // following data will be synced automatically
+        setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
+        setDeltaMovement(Vec3.ZERO);
     }
 
-    private void initBasicProps() {
-        // this.blocksBuilding = true; // not allow building at entity's position
-        this.setInvulnerable(true); // cannot be hurt
+    public static EntityType.Builder<?> build(EntityType.Builder<?> builder) {
+        @SuppressWarnings("unchecked")
+        EntityType.Builder<AircraftEntity> entityBuilder = (EntityType.Builder<AircraftEntity>) builder;
+        return entityBuilder.sized(0.1f, 0.1f);
     }
 
-    public void assembleStructure(BlockPos pos) throws AssemblyException {
+    public void assemble(BlockPos pos) throws AircraftAssemblyException {
         AircraftContraption contraption = new AircraftContraption();
-        if (!contraption.assemble(level, pos)) {
-            return;
+        try {
+            if (!contraption.assemble(level, pos)) {
+                return;
+            }
+        } catch (AssemblyException e) {
+            throw new AircraftAssemblyException(e);
         }
 
-        Direction initialOrientation = blockState.getValue(DirectionalBlock.FACING);
+        Direction initialOrientation = blockState.getValue(HORIZONTAL_FACING);
 
         contraption.removeBlocksFromWorld(level, BlockPos.ZERO);
         contraption.startMoving(level);
@@ -89,6 +97,23 @@ public class AircraftEntity extends Entity {
         structure.setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
         level.addFreshEntity(structure);
         structure.startRiding(this);
+    }
+
+    public void dissemble() {
+        disassembleStructure();
+        remove(RemovalReason.DISCARDED);
+    }
+
+    private void disassembleStructure() {
+        if (getPassengers().isEmpty()) {
+            return;
+        }
+        Entity entity = getPassengers().get(0);
+        if (!(entity instanceof OrientedContraptionEntity)) {
+            return;
+        }
+
+        // OrientedContraptionEntity contraption = (OrientedContraptionEntity) entity;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -347,6 +372,6 @@ public class AircraftEntity extends Entity {
 
     @Override
     public Packet<?> getAddEntityPacket() {
-        return null;
+        return new ClientboundAddEntityPacket(this);
     }
 }
