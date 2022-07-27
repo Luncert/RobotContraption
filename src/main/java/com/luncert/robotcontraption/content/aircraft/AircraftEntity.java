@@ -121,20 +121,8 @@ public class AircraftEntity extends Entity {
     }
 
     public void dissemble() {
-        disassembleStructure();
-        remove(RemovalReason.DISCARDED);
-    }
-
-    private void disassembleStructure() {
-        if (getPassengers().isEmpty()) {
-            return;
-        }
-        Entity entity = getPassengers().get(0);
-        if (!(entity instanceof OrientedContraptionEntity)) {
-            return;
-        }
-
-        // OrientedContraptionEntity contraption = (OrientedContraptionEntity) entity;
+        ejectPassengers();
+        discard();
     }
 
     public void forward(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
@@ -206,7 +194,7 @@ public class AircraftEntity extends Entity {
     @Override
     public void tick() {
         if (this.blockState.isAir()) {
-            this.remove(RemovalReason.DISCARDED);
+            discard();
             return;
         }
 
