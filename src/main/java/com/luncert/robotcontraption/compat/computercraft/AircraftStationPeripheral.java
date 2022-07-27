@@ -118,7 +118,7 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public final MethodResult rotate(int degree) throws LuaException {
+    public final MethodResult turnLeft() throws LuaException {
         if (getSpeed() == 0) {
             throw new LuaException("speed is zero");
         }
@@ -126,8 +126,25 @@ public class AircraftStationPeripheral implements IPeripheral {
         int executionId = this.executionId++;
         if (tileEntity != null) {
             try {
-                tileEntity.rotate(degree,
-                        success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE, executionId, success));
+                tileEntity.turnLeft(success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE, executionId, success));
+            } catch (AircraftMovementException e) {
+                throw new LuaException(e.getMessage());
+            }
+        }
+
+        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE);
+    }
+
+    @LuaFunction
+    public final MethodResult turnRight() throws LuaException {
+        if (getSpeed() == 0) {
+            throw new LuaException("speed is zero");
+        }
+
+        int executionId = this.executionId++;
+        if (tileEntity != null) {
+            try {
+                tileEntity.turnRight(success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE, executionId, success));
             } catch (AircraftMovementException e) {
                 throw new LuaException(e.getMessage());
             }

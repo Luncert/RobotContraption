@@ -18,6 +18,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -43,13 +44,13 @@ public class AircraftEntity extends Entity {
     private static final double MIN_MOVE_LENGTH = 1.0E-7D;
 
     private static final EntityDataAccessor<Integer> SPEED =
-            new EntityDataAccessor<>(254, EntityDataSerializers.INT);
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> CLOCKWISE_ROTATION =
-            new EntityDataAccessor<>(253, EntityDataSerializers.BOOLEAN);
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> WAITING_Y_ROT =
-            new EntityDataAccessor<>(252, EntityDataSerializers.FLOAT);
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Optional<AircraftMovement>> WAITING_MOVEMENT =
-            new EntityDataAccessor<>(251, MOVEMENT_SERIALIZER);
+            SynchedEntityData.defineId(AircraftEntity.class, MOVEMENT_SERIALIZER);
 
     private BlockState blockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
 
@@ -72,16 +73,16 @@ public class AircraftEntity extends Entity {
     }
 
     // for server
-    public AircraftEntity(Level world, BlockPos pos, BlockState blockState) {
+    public AircraftEntity(Level world, BlockPos stationPos, BlockState blockState) {
         super(RCEntityTypes.AIRCRAFT.get(), world);
         this.blockState = blockState;
         // following data will be synced automatically
-        setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
+        setPos(stationPos.getX() + .5f, stationPos.getY(), stationPos.getZ() + .5f);
 
+        this.noPhysics = true;
         SimpleDirection blockDirection = SimpleDirection.valueOf(blockState.getValue(HORIZONTAL_FACING).getName().toUpperCase());
-        SimpleDirection direction = getSimpleDirection();
-        setYRot(blockDirection.getDegree() - direction.getDegree());
-        System.out.println(blockDirection.getDegree() - direction.getDegree());
+        setYRot(blockDirection.getDegree() - 180);
+        setWaitingYRot(getYRot());
 
         setDeltaMovement(Vec3.ZERO);
     }
@@ -142,7 +143,7 @@ public class AircraftEntity extends Entity {
 
         SimpleDirection direction = getSimpleDirection();
         Direction.Axis axis = direction.getAxis();
-        int posDelta = direction.isPositive() ? n : -n;
+        int posDelta = direction.getDirectionFactor() * n;
         setWaitingMovement(new AircraftMovement(axis, direction.isPositive(),
                 blockPosition().get(axis) + .5f + posDelta));
         isMoving = true;
@@ -157,6 +158,7 @@ public class AircraftEntity extends Entity {
 
         float yRot = getYRot();
         float waitingYRot = wrapDegrees(yRot + degree);
+        System.out.println(waitingYRot + "  " + yRot + "  " + degree);
         setWaitingYRot(waitingYRot);
         if (degree > 0) {
             if (waitingYRot < yRot) {
@@ -220,7 +222,7 @@ public class AircraftEntity extends Entity {
             this.setDeltaMovement(Vec3.ZERO);
         }
 
-        tickCollide();
+        // tickCollide();
     }
 
     private void tickLerp() {
@@ -476,5 +478,33 @@ public class AircraftEntity extends Entity {
     @Override
     public Packet<?> getAddEntityPacket() {
         return new ClientboundAddEntityPacket(this);
+    }
+
+    @Override
+    public void positionRider(Entity rider) {
+        if (this.hasPassenger(rider)) {
+            double d0 = this.getY() + this.getPassengersRidingOffset() + rider.getMyRidingOffset();
+            rider.setPos(this.getX(), d0, this.getZ());
+
+            OrientedContraptionEntity structure = (OrientedContraptionEntity) rider;
+            // System.out.println((level.isClientSide ? "C" : "S") + getYRot() + "  " + structure.yaw);
+            structure.startAtYaw((getYRot() + 180) % 360);
+
+            // let rider rotate with robot
+            // rider.setYRot(this.deltaRotation);
+            // rider.setYHeadRot(rider.getYHeadRot() + this.deltaRotation);
+            // clampRotation(rider);
+
+            // if (rider instanceof ClientPlayerEntity) {
+            //     setInput(((ClientPlayerEntity) rider).input);
+            // }
+
+            // code for more than one passenger, let second passenger rotate 90
+            // if (rider instanceof AnimalEntity && this.getPassengers().size() > 1) {
+            //     int j = rider.getId() % 2 == 0 ? 90 : 270;
+            //     rider.setYBodyRot(((AnimalEntity) rider).yBodyRot + (float)j);
+            //     rider.setYHeadRot(rider.getYHeadRot() + (float)j);
+            // }
+        }
     }
 }

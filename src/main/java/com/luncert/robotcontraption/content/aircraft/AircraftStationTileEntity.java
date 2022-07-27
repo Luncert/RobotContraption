@@ -69,8 +69,12 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
         entity.forward(n, callback);
     }
 
-    public void rotate(int degree, AircraftEntityActionCallback callback) throws AircraftMovementException {
-        entity.rotate(degree, callback);
+    public void turnLeft(AircraftEntityActionCallback callback) throws AircraftMovementException {
+        entity.rotate(-90, callback);
+    }
+
+    public void turnRight(AircraftEntityActionCallback callback) throws AircraftMovementException {
+        entity.rotate(90, callback);
     }
 
     public boolean setRPM(int rpm) {
