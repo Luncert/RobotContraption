@@ -1,6 +1,7 @@
 package com.luncert.robotcontraption.content.aircraft;
 
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
+import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.content.common.SimpleDirection;
 import com.luncert.robotcontraption.content.index.RCBlocks;
 import com.luncert.robotcontraption.content.index.RCEntityTypes;
@@ -9,6 +10,7 @@ import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.mojang.math.Vector3d;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import com.simibubi.create.content.contraptions.components.structureMovement.OrientedContraptionEntity;
+import com.simibubi.create.foundation.advancement.AllAdvancements;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -20,6 +22,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
@@ -77,8 +80,8 @@ public class AircraftEntity extends Entity {
         return entityBuilder.sized(0.1f, 0.1f);
     }
 
-    public void assemble(BlockPos pos) throws AircraftAssemblyException {
-        AircraftContraption contraption = new AircraftContraption();
+    public void assemble(BlockPos pos, AircraftMovementMode mode) throws AircraftAssemblyException {
+        AircraftContraption contraption = new AircraftContraption(mode);
         try {
             if (!contraption.assemble(level, pos)) {
                 return;
@@ -97,6 +100,10 @@ public class AircraftEntity extends Entity {
         structure.setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
         level.addFreshEntity(structure);
         structure.startRiding(this);
+
+        // if (contraption.containsBlockBreakers()) {
+        //     award(AllAdvancements.CONTRAPTION_ACTORS);
+        // }
     }
 
     public void dissemble() {
@@ -129,7 +136,25 @@ public class AircraftEntity extends Entity {
 
     @Override
     public void tick() {
+        if (this.blockState.isAir()) {
+            this.remove(RemovalReason.DISCARDED);
+            return;
+        }
+
         super.tick();
+        tickLerp();
+
+        if (isControlledByLocalInstance()) {
+            if (!tryToRotate()) {
+                tryToMove();
+            }
+
+            this.move(MoverType.SELF, this.getDeltaMovement());
+        } else {
+            this.setDeltaMovement(Vec3.ZERO);
+        }
+
+        tickCollide();
     }
 
     private void tickLerp() {

@@ -45,7 +45,7 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
     public void assemble(AircraftMovementMode mode) throws AircraftAssemblyException {
         AircraftEntity aircraft = new AircraftEntity(level, worldPosition, getBlockState());
         level.addFreshEntity(aircraft);
-        aircraft.assemble(worldPosition);
+        aircraft.assemble(worldPosition, mode);
         this.entity = aircraft;
     }
 
