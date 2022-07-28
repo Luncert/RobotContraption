@@ -67,6 +67,7 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
         }
 
         entity.dissemble();
+        entity = null;
     }
 
     public void forward(int n, AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {

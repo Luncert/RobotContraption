@@ -24,9 +24,9 @@ import java.util.Queue;
 
 public class AircraftContraption extends Contraption {
 
-    private static final ContraptionType ROBOT = ContraptionType.register("robot", AircraftContraption::new);
+    private static final ContraptionType AIRCRAFT = ContraptionType.register("aircraft", AircraftContraption::new);
 
-    private AircraftMovementMode rotationMode;
+    public AircraftMovementMode rotationMode;
 
     public AircraftContraption() {
         this(AircraftMovementMode.ROTATE);
@@ -38,7 +38,7 @@ public class AircraftContraption extends Contraption {
 
     @Override
     protected ContraptionType getType() {
-        return ROBOT;
+        return AIRCRAFT;
     }
 
     @Override
