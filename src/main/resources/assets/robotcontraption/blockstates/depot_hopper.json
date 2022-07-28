@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "robotcontraption:block/depot_hopper",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "robotcontraption:block/depot_hopper",
+      "y":90
+    },
+    "facing=south": {
+      "model": "robotcontraption:block/depot_hopper",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "robotcontraption:block/depot_hopper",
+      "y": 270
+    }
+  }
+}
