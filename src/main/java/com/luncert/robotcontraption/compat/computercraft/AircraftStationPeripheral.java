@@ -15,6 +15,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
+
+import static com.luncert.robotcontraption.compat.computercraft.AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE;
 
 public class AircraftStationPeripheral implements IPeripheral {
 
@@ -30,8 +33,12 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     public void queueEvent(String event, Object... args) {
+        withComputer(c -> c.queueEvent(event, args));
+    }
+
+    private void withComputer(Consumer<IComputerAccess> action) {
         for (IComputerAccess computer : connected) {
-            computer.queueEvent(event, args);
+            action.accept(computer);
         }
     }
 
@@ -71,7 +78,7 @@ public class AircraftStationPeripheral implements IPeripheral {
     public final void assemble(String rotationMode) throws LuaException {
         AircraftMovementMode mode;
         try {
-            mode = AircraftMovementMode.valueOf(rotationMode);
+            mode = AircraftMovementMode.valueOf(rotationMode.toUpperCase());
         }catch (IllegalArgumentException e) {
             throw new LuaException("Invalid mode, must be one of " + Arrays.toString(AircraftMovementMode.values()));
         }
@@ -103,21 +110,17 @@ public class AircraftStationPeripheral implements IPeripheral {
         if (n <= 0) {
             throw new LuaException("n must be positive");
         }
-        if (getSpeed() == 0) {
-            throw new LuaException("speed is zero");
-        }
 
         int executionId = this.executionId++;
         if (tileEntity != null) {
             try {
-                tileEntity.forward(n,
-                        success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, success));
+                tileEntity.forward(n, (done, data) -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, done, data));
             } catch (AircraftMovementException | AircraftAssemblyException e) {
                 throw new LuaException(e.getMessage());
             }
         }
 
-        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE);
+        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
     @LuaFunction
@@ -125,20 +128,17 @@ public class AircraftStationPeripheral implements IPeripheral {
         if (n <= 0) {
             throw new LuaException("n must be positive");
         }
-        if (getSpeed() == 0) {
-            throw new LuaException("speed is zero");
-        }
 
         int executionId = this.executionId++;
         if (tileEntity != null) {
             try {
-                tileEntity.turnLeft(n, success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, success));
+                tileEntity.turnLeft(n, (done, data) -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, done, data));
             } catch (AircraftMovementException | AircraftAssemblyException e) {
                 throw new LuaException(e.getMessage());
             }
         }
 
-        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE);
+        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
     @LuaFunction
@@ -146,31 +146,26 @@ public class AircraftStationPeripheral implements IPeripheral {
         if (n <= 0) {
             throw new LuaException("n must be positive");
         }
-        if (getSpeed() == 0) {
-            throw new LuaException("speed is zero");
-        }
 
         int executionId = this.executionId++;
         if (tileEntity != null) {
             try {
-                tileEntity.turnRight(n, success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, success));
+                tileEntity.turnRight(n, (done, data) -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, done));
             } catch (AircraftMovementException | AircraftAssemblyException e) {
                 throw new LuaException(e.getMessage());
             }
         }
 
-        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE);
+        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
     @LuaFunction
-    public final void setSpeed(int rpm) throws LuaException {
-        if(rpm == getSpeed()) {
-            return;
-        }
-
+    public final void setSpeed(int speed) throws LuaException {
         if(tileEntity != null) {
-            if(!tileEntity.setRPM(rpm)) {
-                throw new LuaException("Speed is set too many times per second (Anti Spam).");
+            try {
+                tileEntity.setAircraftSpeed(speed);
+            } catch (AircraftAssemblyException e) {
+                throw new LuaException(e.getMessage());
             }
         }
     }
@@ -183,7 +178,11 @@ public class AircraftStationPeripheral implements IPeripheral {
     @LuaFunction(mainThread = true)
     public final int getSpeed() throws LuaException {
         if(tileEntity != null) {
-            return tileEntity.getRPM();
+            try {
+                return tileEntity.getAircraftSpeed();
+            } catch (AircraftAssemblyException e) {
+                throw new LuaException(e.getMessage());
+            }
         }
         return 0;
     }

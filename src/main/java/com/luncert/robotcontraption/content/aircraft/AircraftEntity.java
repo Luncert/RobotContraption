@@ -3,6 +3,7 @@ package com.luncert.robotcontraption.content.aircraft;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
+import com.luncert.robotcontraption.content.common.ActionCallback;
 import com.luncert.robotcontraption.content.common.SimpleDirection;
 import com.luncert.robotcontraption.content.index.RCBlocks;
 import com.luncert.robotcontraption.content.index.RCEntityTypes;
@@ -33,7 +34,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
-import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
@@ -46,20 +46,14 @@ public class AircraftEntity extends Entity {
 
     private static final EntityDataAccessor<Integer> SPEED =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Boolean> CLOCKWISE_ROTATION =
-            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.BOOLEAN);
-    private static final EntityDataAccessor<Float> TARGET_Y_ROT =
-            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Optional<AircraftMovement>> TARGET_MOVEMENT =
             SynchedEntityData.defineId(AircraftEntity.class, MOVEMENT_SERIALIZER);
 
     private BlockState blockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
 
-    private final Queue<AircraftEntityActionCallback> asyncCallbacks = new ArrayDeque<>();
-    public boolean isRotating;
+    private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
+    private boolean isStalled;
     public boolean isMoving;
-
-    public float deltaRotation;
 
     private int lerpSteps;
     private double lerpX;
@@ -83,7 +77,6 @@ public class AircraftEntity extends Entity {
         this.noPhysics = true;
         SimpleDirection blockDirection = SimpleDirection.valueOf(blockState.getValue(HORIZONTAL_FACING).getName().toUpperCase());
         setYRot(blockDirection.getDegree() - 180);
-        setTargetYRot(getYRot());
 
         setDeltaMovement(Vec3.ZERO);
     }
@@ -95,26 +88,6 @@ public class AircraftEntity extends Entity {
     }
 
     public void assemble(BlockPos pos, AircraftMovementMode mode) throws AircraftAssemblyException {
-        // AircraftContraption contraption = new AircraftContraption(mode);
-        // try {
-        //     if (!contraption.assemble(level, pos)) {
-        //         return;
-        //     }
-        // } catch (AssemblyException e) {
-        //     throw new AircraftAssemblyException(e);
-        // }
-        //
-        // Direction initialOrientation = blockState.getValue(HORIZONTAL_FACING);
-        //
-        // contraption.removeBlocksFromWorld(level, BlockPos.ZERO);
-        // contraption.startMoving(level);
-        // contraption.expandBoundsAroundAxis(Direction.Axis.Y);
-        //
-        // AircraftContraptionEntity structure = AircraftContraptionEntity.create(level, contraption, initialOrientation);
-        // structure.setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
-        // level.addFreshEntity(structure);
-        // structure.startRiding(this);
-
         AircraftContraption contraption = new AircraftContraption(mode);
         try {
             if (!contraption.assemble(level, pos)) {
@@ -141,8 +114,8 @@ public class AircraftEntity extends Entity {
         discard();
     }
 
-    public void forward(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
-        if (isActive()) {
+    public void forward(int n, ActionCallback callback) throws AircraftMovementException {
+        if (isMoving) {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
@@ -155,8 +128,8 @@ public class AircraftEntity extends Entity {
         asyncCallbacks.add(callback);
     }
 
-    public void turnLeft(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
-        if (isActive()) {
+    public void turnLeft(int n, ActionCallback callback) throws AircraftMovementException {
+        if (isMoving) {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
@@ -164,8 +137,8 @@ public class AircraftEntity extends Entity {
         forward(n, callback);
     }
 
-    public void turnRight(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
-        if (isActive()) {
+    public void turnRight(int n, ActionCallback callback) throws AircraftMovementException {
+        if (isMoving) {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
@@ -173,40 +146,17 @@ public class AircraftEntity extends Entity {
         forward(n, callback);
     }
 
+    public void stall() {
+        isStalled = true;
+    }
+
+    public void cancelStall() {
+        isStalled = false;
+    }
+
     private void rotate(int degree) {
-        float yRot = getYRot();
-        float waitingYRot = wrapDegrees(yRot + degree);
-        setTargetYRot(waitingYRot);
-        setYRot(waitingYRot);
-        // if (degree > 0) {
-        //     if (waitingYRot < yRot) {
-        //         setYRot(-180);
-        //     }
-        // } else {
-        //     if (waitingYRot > yRot) {
-        //         setYRot(180);
-        //     }
-        // }
-        // isRotating = true;
+        setYRot(wrapDegrees(getYRot() + degree));
     }
-
-    private boolean isActive() {
-        return isRotating || isMoving;
-    }
-
-    // private boolean isRotating() {
-    //     return getYRot() != getWaitingYRot();
-    // }
-    //
-    // private boolean isMoving() {
-    //     Optional<AircraftMovement> opt = getWaitingMovement();
-    //     if (opt.isPresent()) {
-    //         AircraftMovement movement = opt.get();
-    //         double v = position().get(movement.axis);
-    //         return v != movement.expectedPos;
-    //     }
-    //     return false;
-    // }
 
     @OnlyIn(Dist.CLIENT)
     public void lerpTo(double lerpX, double lerpY, double lerpZ, float lerpYRot, float lerpXRot,
@@ -230,18 +180,13 @@ public class AircraftEntity extends Entity {
         tickLerp();
 
         if (isControlledByLocalInstance()) {
-            // if (!tryToRotate()) {
-            //     tryToMove();
-            // }
-
-            boolean contraptionStalled = false;
             // if contraption is stalled, stop movement
             // List<Entity> passengers = getPassengers();
             // if (!passengers.isEmpty() && passengers.get(0) instanceof AircraftContraptionEntity rider) {
             //     contraptionStalled = rider.isStalled();
             // }
 
-            if (!contraptionStalled) {
+            if (!isStalled) {
                 tryToMove();
             }
 
@@ -295,20 +240,6 @@ public class AircraftEntity extends Entity {
         }
     }
 
-    private boolean tryToRotate() {
-        if (getYRot() != getTargetYRot()) {
-            updateYRot();
-            return true;
-        }
-
-        deltaRotation = 0;
-        if (isRotating) {
-            asyncCallbacks.remove().accept(true);
-        }
-        isRotating = false;
-        return false;
-    }
-
     private void tryToMove() {
         Optional<AircraftMovement> opt = getTargetMovement();
         if (opt.isPresent()) {
@@ -317,6 +248,7 @@ public class AircraftEntity extends Entity {
             if (v != movement.expectedPos) {
                 double absDist = Math.abs(movement.expectedPos - v);
                 if (absDist != 0 && updateDeltaMovement(absDist)) {
+
                     return;
                 }
             }
@@ -367,60 +299,8 @@ public class AircraftEntity extends Entity {
         }).orElse(false);
     }
 
-    private void updateYRot() {
-        if (getTargetYRot() > getYRot()) {
-            incYRot();
-        } else {
-            decYRot();
-        }
-    }
-
-    private void updateYRot(float deltaYRot) {
-        float yRot = getYRot();
-        float waitingYRot = wrapDegrees(yRot + deltaYRot);
-        setTargetYRot(waitingYRot);
-        if (deltaYRot > 0) {
-            if (waitingYRot < yRot) {
-                setYRot(-180);
-            }
-            incYRot();
-        } else {
-            if (waitingYRot > yRot) {
-                setYRot(180);
-            }
-            decYRot();
-        }
-    }
-
     private float wrapDegrees(float d) {
-        d %= 360.0f;
-
-        if (d > 180) {
-            d -= 360f;
-        } else if (d < -180) {
-            d += 360f;
-        }
-
-        return d;
-    }
-
-    private void incYRot() {
-        float yRot = getYRot();
-        float rot = Math.min(yRot + getRotationSpeed(), getTargetYRot());
-        deltaRotation = rot - yRot;
-        setYRot(rot);
-    }
-
-    private void decYRot() {
-        float yRot = getYRot();
-        float rot = Math.max(yRot - getRotationSpeed(), getTargetYRot());
-        deltaRotation = rot - yRot;
-        setYRot(rot);
-    }
-
-    private float getRotationSpeed() {
-        // 18 = 5 tick / 90 angle
-        return 18 * getLinearSpeed();
+        return d % 360f;
     }
 
     private float getMovementSpeed() {
@@ -432,24 +312,11 @@ public class AircraftEntity extends Entity {
     }
 
     public void setSpeed(int speed) {
-        if (speed < 0) {
-            entityData.set(CLOCKWISE_ROTATION, false);
-        } else {
-            entityData.set(CLOCKWISE_ROTATION, true);
-        }
         entityData.set(SPEED, Mth.clamp(Math.abs(speed), 0, 255));
     }
 
     public int getSpeed() {
         return entityData.get(SPEED);
-    }
-
-    private void setTargetYRot(float v) {
-        entityData.set(TARGET_Y_ROT, v);
-    }
-
-    public float getTargetYRot() {
-        return entityData.get(TARGET_Y_ROT);
     }
 
     public void setWaitingMovement(@Nullable AircraftMovement movement) {
@@ -465,9 +332,7 @@ public class AircraftEntity extends Entity {
     @Override
     protected void defineSynchedData() {
         entityData.clearDirty();
-        entityData.define(SPEED, 50);
-        entityData.define(CLOCKWISE_ROTATION, true);
-        entityData.define(TARGET_Y_ROT, 0f);
+        entityData.define(SPEED, 32);
         entityData.define(TARGET_MOVEMENT, Optional.empty());
     }
 
@@ -477,8 +342,6 @@ public class AircraftEntity extends Entity {
             return;
 
         entityData.set(SPEED, compound.getInt("speed"));
-        entityData.set(CLOCKWISE_ROTATION, compound.getBoolean("clockwiseRotation"));
-        setTargetYRot(compound.getFloat("waitingYRot"));
         if (compound.getBoolean("hasWaitingMovement")) {
             compound = compound.getCompound("waitingMovement");
             setWaitingMovement(new AircraftMovement(Direction.Axis.values()[compound.getInt("axis")],
@@ -489,8 +352,6 @@ public class AircraftEntity extends Entity {
     @Override
     protected void addAdditionalSaveData(CompoundTag compound) {
         compound.putInt("speed", getSpeed());
-        compound.putBoolean("clockwiseRotation", entityData.get(CLOCKWISE_ROTATION));
-        compound.putFloat("waitingYRot", getTargetYRot());
         Optional<AircraftMovement> opt = getTargetMovement();
         compound.putBoolean("hasWaitingMovement", opt.isPresent());
         opt.ifPresent(movement -> {
@@ -510,34 +371,5 @@ public class AircraftEntity extends Entity {
     @Override
     public double getPassengersRidingOffset() {
         return 0;
-    }
-
-    @Override
-    public void positionRider(Entity rider) {
-        if (this.hasPassenger(rider)) {
-            double d0 = this.getY() + this.getPassengersRidingOffset() + rider.getMyRidingOffset();
-            rider.setPos(this.getX(), d0, this.getZ());
-
-            // OrientedContraptionEntity structure = (OrientedContraptionEntity) rider;
-            // // System.out.println((level.isClientSide ? "C" : "S") + getYRot() + "  " + structure.yaw);
-            // structure.prevYaw = structure.yaw;
-            // structure.yaw = (structure.yaw + deltaRotation) % 360;
-
-            // let rider rotate with robot
-            // rider.setYRot(this.deltaRotation);
-            // rider.setYHeadRot(rider.getYHeadRot() + this.deltaRotation);
-            // clampRotation(rider);
-
-            // if (rider instanceof ClientPlayerEntity) {
-            //     setInput(((ClientPlayerEntity) rider).input);
-            // }
-
-            // code for more than one passenger, let second passenger rotate 90
-            // if (rider instanceof AnimalEntity && this.getPassengers().size() > 1) {
-            //     int j = rider.getId() % 2 == 0 ? 90 : 270;
-            //     rider.setYBodyRot(((AnimalEntity) rider).yBodyRot + (float)j);
-            //     rider.setYHeadRot(rider.getYHeadRot() + (float)j);
-            // }
-        }
     }
 }

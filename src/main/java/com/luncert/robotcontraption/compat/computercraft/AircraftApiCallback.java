@@ -24,11 +24,18 @@ public class AircraftApiCallback implements ILuaCallback {
     @NotNull
     @Override
     public MethodResult resume(Object[] response) throws LuaException {
-        if (response.length >= 3 && response[1] instanceof Number && response[2] instanceof Boolean) {
-            return ((Number) response[1]).intValue() != this.executionId ?
-                    callbackHook : MethodResult.of(Arrays.copyOfRange(response, 2, response.length));
-        } else {
-            return callbackHook;
+        // 0 is event name
+        if (response.length >= 3 && response[1] instanceof Number
+                && response[2] instanceof Boolean) {
+            int responseId = ((Number) response[1]).intValue();
+            if (responseId == this.executionId) {
+                boolean done = Boolean.TRUE.equals(response[2]);
+                Object[] executionResult = Arrays.copyOfRange(response, 3, response.length);
+                System.out.println(done + " " + Arrays.toString(executionResult));
+                return MethodResult.of(executionResult);
+            }
         }
+
+        return callbackHook;
     }
 }

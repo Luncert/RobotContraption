@@ -4,6 +4,7 @@ import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripher
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.config.Config;
+import com.luncert.robotcontraption.content.common.ActionCallback;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
@@ -21,17 +22,6 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
 
     private LazyOptional<AircraftStationPeripheral> peripheral;
     private AircraftEntity entity;
-
-    // create
-
-    private boolean cc_update_rpm = false;
-    private int cc_new_rpm = 32;
-    private boolean assembleNextTick;
-
-    // CC
-
-    int cc_antiSpam = 0;
-    boolean first = true;
 
     public AircraftStationTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -54,9 +44,7 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
     }
 
     public void dissemble() throws AircraftAssemblyException {
-        if (entity == null) {
-            throw new AircraftAssemblyException("aircraft_dissembled");
-        }
+        checkContraptionStatus();
 
         Vec3 blockPos = Vec3.atCenterOf(getBlockPos()).add(0, -0.5, 0);
         if (!blockPos.equals(entity.position())) {
@@ -69,37 +57,44 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
         entity = null;
     }
 
-    public void forward(int n, AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
-        if (entity == null) {
-            throw new AircraftAssemblyException("aircraft_dissembled");
+    public void forward(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+        checkContraptionStatus();
+        if (getAircraftSpeed() == 0) {
+            throw new AircraftMovementException("speed_is_zero");
         }
         entity.forward(n, callback);
     }
 
-    public void turnLeft(int n, AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
-        if (entity == null) {
-            throw new AircraftAssemblyException("aircraft_dissembled");
+    public void turnLeft(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+        checkContraptionStatus();
+        if (getAircraftSpeed() == 0) {
+            throw new AircraftMovementException("speed_is_zero");
         }
         entity.turnLeft(n, callback);
     }
 
-    public void turnRight(int n, AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
-        if (entity == null) {
-            throw new AircraftAssemblyException("aircraft_dissembled");
+    public void turnRight(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+        checkContraptionStatus();
+        if (getAircraftSpeed() == 0) {
+            throw new AircraftMovementException("speed_is_zero");
         }
         entity.turnRight(n, callback);
     }
 
-    public boolean setRPM(int rpm) {
-        //System.out.println("SET SPEED" + rpm);
-        rpm = Math.max(Math.min(rpm, RPM_RANGE), -RPM_RANGE);
-        cc_new_rpm = rpm;
-        cc_update_rpm = true;
-        return cc_antiSpam > 0;
+    public void setAircraftSpeed(int speed) throws AircraftAssemblyException {
+        checkContraptionStatus();
+        entity.setSpeed(speed);
     }
 
-    public int getRPM() {
-        return cc_new_rpm;//generatedSpeed.getValue();
+    public int getAircraftSpeed() throws AircraftAssemblyException {
+        checkContraptionStatus();
+        return entity.getSpeed();//generatedSpeed.getValue();
+    }
+
+    private void checkContraptionStatus() throws AircraftAssemblyException {
+        if (entity == null) {
+            throw new AircraftAssemblyException("aircraft_dissembled");
+        }
     }
 
     // forge

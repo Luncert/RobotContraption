@@ -1,5 +1,6 @@
 package com.luncert.robotcontraption.compat.create;
 
+import com.luncert.robotcontraption.content.aircraft.AircraftEntity;
 import com.luncert.robotcontraption.content.index.RCEntityTypes;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.OrientedContraptionEntity;
@@ -8,6 +9,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 public class AircraftContraptionEntity extends OrientedContraptionEntity {
 
@@ -28,8 +30,8 @@ public class AircraftContraptionEntity extends OrientedContraptionEntity {
         if (nonDamageTicks > 0)
             nonDamageTicks--;
 
-        Entity e = getVehicle();
-        if (e == null)
+        AircraftEntity vehicle = (AircraftEntity) getVehicle();
+        if (vehicle == null)
             return;
 
         boolean rotationLock = false;
@@ -40,12 +42,16 @@ public class AircraftContraptionEntity extends OrientedContraptionEntity {
             pauseWhileRotating = contraption.rotationMode == AircraftMovementMode.ROTATE_PAUSED;
         }
 
-        Entity riding = e;
-        while (riding.getVehicle() != null && !(contraption instanceof StabilizedContraption))
-            riding = riding.getVehicle();
-
-        boolean rotating = updateOrientation(rotationLock, wasStalled, riding, false);
+        boolean rotating = updateOrientation(rotationLock, wasStalled, vehicle, false);
         if (!rotating || !pauseWhileRotating)
             tickActors();
+
+        boolean isStalled = isStalled();
+
+        if (isStalled) {
+            vehicle.stall();
+        } else if (wasStalled) {
+            vehicle.cancelStall();
+        }
     }
 }
