@@ -6,7 +6,7 @@
     " W "],
   "key": {
     "W": {
-      "tag": "create:iron_sheet"
+      "tag": "forge:plates/iron"
     },
     "S": {
       "item": "create:andesite_funnel"

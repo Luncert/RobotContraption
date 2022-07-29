@@ -14,7 +14,7 @@
       "item": "create:electron_tube"
     },
     "B": {
-      "tag": "minecraft:glass_pane"
+      "item": "minecraft:black_stained_glass_pane"
     },
     "S": {
       "item": "create:sturdy_sheet"
