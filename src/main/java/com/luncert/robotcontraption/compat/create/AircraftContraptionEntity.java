@@ -35,9 +35,9 @@ public class AircraftContraptionEntity extends OrientedContraptionEntity {
         boolean rotationLock = false;
         boolean pauseWhileRotating = false;
         boolean wasStalled = isStalled();
-        if (contraption instanceof AircraftContraption mountedContraption) {
-            rotationLock = mountedContraption.rotationMode == AircraftMovementMode.ROTATION_LOCKED;
-            pauseWhileRotating = mountedContraption.rotationMode == AircraftMovementMode.ROTATE_PAUSED;
+        if (contraption instanceof AircraftContraption contraption) {
+            rotationLock = contraption.rotationMode == AircraftMovementMode.ROTATION_LOCKED;
+            pauseWhileRotating = contraption.rotationMode == AircraftMovementMode.ROTATE_PAUSED;
         }
 
         Entity riding = e;

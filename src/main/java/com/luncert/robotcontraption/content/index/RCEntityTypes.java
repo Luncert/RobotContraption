@@ -2,10 +2,10 @@ package com.luncert.robotcontraption.content.index;
 
 import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
+import com.luncert.robotcontraption.compat.create.AircraftContraptionEntityRenderer;
 import com.luncert.robotcontraption.content.aircraft.AircraftEntity;
 import com.luncert.robotcontraption.content.aircraft.AircraftEntityRenderer;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.OrientedContraptionEntityRenderer;
 import com.simibubi.create.foundation.data.CreateEntityBuilder;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.utility.Lang;
@@ -28,7 +28,7 @@ public class RCEntityTypes {
                     1, Integer.MAX_VALUE, false, true, AircraftEntity::build).register();
 
     public static final EntityEntry<AircraftContraptionEntity> AIRCRAFT_CONTRAPTION = contraption("aircraft_contraption",
-            AircraftContraptionEntity::new, () -> OrientedContraptionEntityRenderer::new, 5, 3, true).register();
+            AircraftContraptionEntity::new, () -> AircraftContraptionEntityRenderer::new, 5, 3, true).register();
 
     private static <T extends Entity> CreateEntityBuilder<T, ?> contraption(String name,
                                                                             EntityType.EntityFactory<T> factory,

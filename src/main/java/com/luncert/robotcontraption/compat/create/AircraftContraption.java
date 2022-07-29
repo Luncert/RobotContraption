@@ -63,7 +63,6 @@ public class AircraftContraption extends Contraption {
     @Override
     protected Pair<StructureTemplate.StructureBlockInfo, BlockEntity> capture(Level world, BlockPos pos) {
         Pair<StructureTemplate.StructureBlockInfo, BlockEntity> pair = super.capture(world, pos);
-        System.out.println(pair + "-" + getTileEntityNBT(world, pos) + ":" + world.getBlockEntity(pos));
         StructureTemplate.StructureBlockInfo capture = pair.getKey();
         if (!RCBlocks.AIRCRAFT_STATION.has(capture.state)) {
             return pair;

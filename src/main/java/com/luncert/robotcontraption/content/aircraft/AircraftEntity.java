@@ -33,6 +33,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
@@ -229,7 +230,18 @@ public class AircraftEntity extends Entity {
         tickLerp();
 
         if (isControlledByLocalInstance()) {
-            if (!tryToRotate()) {
+            // if (!tryToRotate()) {
+            //     tryToMove();
+            // }
+
+            boolean contraptionStalled = false;
+            // if contraption is stalled, stop movement
+            // List<Entity> passengers = getPassengers();
+            // if (!passengers.isEmpty() && passengers.get(0) instanceof AircraftContraptionEntity rider) {
+            //     contraptionStalled = rider.isStalled();
+            // }
+
+            if (!contraptionStalled) {
                 tryToMove();
             }
 
@@ -297,7 +309,7 @@ public class AircraftEntity extends Entity {
         return false;
     }
 
-    private boolean tryToMove() {
+    private void tryToMove() {
         Optional<AircraftMovement> opt = getTargetMovement();
         if (opt.isPresent()) {
             AircraftMovement movement = opt.get();
@@ -305,7 +317,7 @@ public class AircraftEntity extends Entity {
             if (v != movement.expectedPos) {
                 double absDist = Math.abs(movement.expectedPos - v);
                 if (absDist != 0 && updateDeltaMovement(absDist)) {
-                    return true;
+                    return;
                 }
             }
             setWaitingMovement(null);
@@ -316,7 +328,6 @@ public class AircraftEntity extends Entity {
             asyncCallbacks.remove().accept(true);
         }
         isMoving = false;
-        return false;
     }
 
     private boolean isFree(BlockState blockState) {
