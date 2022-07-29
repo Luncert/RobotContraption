@@ -1,7 +1,7 @@
-package com.luncert.robotcontraption.content.groups;
+package com.luncert.robotcontraption.groups;
 
 import com.luncert.robotcontraption.Reference;
-import com.luncert.robotcontraption.content.index.RCBlocks;
+import com.luncert.robotcontraption.index.RCBlocks;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 

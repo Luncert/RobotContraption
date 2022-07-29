@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.compat.create;
 
-import com.luncert.robotcontraption.content.index.RCBlocks;
+import com.luncert.robotcontraption.index.RCBlocks;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;

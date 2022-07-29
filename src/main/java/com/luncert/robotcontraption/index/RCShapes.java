@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.content.index;
+package com.luncert.robotcontraption.index;
 
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import net.minecraft.core.Direction;

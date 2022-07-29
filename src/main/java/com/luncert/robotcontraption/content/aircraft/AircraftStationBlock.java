@@ -1,8 +1,8 @@
 package com.luncert.robotcontraption.content.aircraft;
 
-import com.luncert.robotcontraption.content.index.RCBlocks;
-import com.luncert.robotcontraption.content.index.RCShapes;
-import com.luncert.robotcontraption.content.index.RCTileEntities;
+import com.luncert.robotcontraption.index.RCBlocks;
+import com.luncert.robotcontraption.index.RCShapes;
+import com.luncert.robotcontraption.index.RCTileEntities;
 import com.simibubi.create.content.contraptions.base.HorizontalKineticBlock;
 import com.simibubi.create.foundation.block.ITE;
 import com.simibubi.create.foundation.utility.VoxelShaper;

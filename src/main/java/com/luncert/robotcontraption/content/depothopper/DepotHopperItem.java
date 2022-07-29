@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.content.depothopper;
 
-import com.luncert.robotcontraption.content.index.RCBlocks;
+import com.luncert.robotcontraption.index.RCBlocks;
 import com.simibubi.create.AllBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

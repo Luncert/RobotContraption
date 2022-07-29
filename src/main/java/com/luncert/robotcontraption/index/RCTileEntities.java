@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.content.index;
+package com.luncert.robotcontraption.index;
 
 import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationInstance;

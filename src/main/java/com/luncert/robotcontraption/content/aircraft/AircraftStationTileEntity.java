@@ -4,7 +4,7 @@ import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripher
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.config.Config;
-import com.luncert.robotcontraption.content.common.ActionCallback;
+import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;

@@ -1,10 +1,9 @@
-package com.luncert.robotcontraption.content.index;
+package com.luncert.robotcontraption.index;
 
-import com.luncert.robotcontraption.Reference;
 import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperItem;
-import com.luncert.robotcontraption.content.groups.ModGroup;
+import com.luncert.robotcontraption.groups.ModGroup;
 import com.luncert.robotcontraption.content.aircraft.AircraftAnchorBlock;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
 import com.simibubi.create.AllTags;
@@ -14,7 +13,6 @@ import com.simibubi.create.foundation.block.BlockStressDefaults;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.simibubi.create.repack.registrate.util.entry.BlockEntry;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 import static com.simibubi.create.foundation.data.ModelGen.customItemModel;

@@ -1,7 +1,7 @@
 package com.luncert.robotcontraption.content.depothopper;
 
-import com.luncert.robotcontraption.content.index.RCShapes;
-import com.luncert.robotcontraption.content.index.RCTileEntities;
+import com.luncert.robotcontraption.index.RCShapes;
+import com.luncert.robotcontraption.index.RCTileEntities;
 import com.simibubi.create.foundation.block.ITE;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;

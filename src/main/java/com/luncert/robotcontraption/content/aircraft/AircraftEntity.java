@@ -1,15 +1,14 @@
 package com.luncert.robotcontraption.content.aircraft;
 
+import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
-import com.luncert.robotcontraption.content.common.ActionCallback;
-import com.luncert.robotcontraption.content.common.SimpleDirection;
-import com.luncert.robotcontraption.content.index.RCBlocks;
-import com.luncert.robotcontraption.content.index.RCEntityTypes;
 import com.luncert.robotcontraption.content.util.Common;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
+import com.luncert.robotcontraption.index.RCBlocks;
+import com.luncert.robotcontraption.index.RCEntityTypes;
 import com.mojang.math.Vector3d;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import net.minecraft.core.BlockPos;
@@ -20,14 +19,12 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -75,8 +72,8 @@ public class AircraftEntity extends Entity {
         setPos(stationPos.getX() + .5f, stationPos.getY(), stationPos.getZ() + .5f);
 
         this.noPhysics = true;
-        SimpleDirection blockDirection = SimpleDirection.valueOf(blockState.getValue(HORIZONTAL_FACING).getName().toUpperCase());
-        setYRot(blockDirection.getDegree() - 180);
+        Direction blockDirection = blockState.getValue(HORIZONTAL_FACING);
+        setYRot(blockDirection.toYRot());
 
         setDeltaMovement(Vec3.ZERO);
     }
@@ -119,10 +116,11 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        SimpleDirection direction = getSimpleDirection();
+        Direction direction = Direction.fromYRot(getYRot());
         Direction.Axis axis = direction.getAxis();
-        int posDelta = direction.getDirectionFactor() * n;
-        setWaitingMovement(new AircraftMovement(axis, direction.isPositive(),
+        Direction.AxisDirection axisDirection = direction.getAxisDirection();
+        int posDelta = axisDirection.getStep() * n;
+        setWaitingMovement(new AircraftMovement(axis, axisDirection.equals(Direction.AxisDirection.POSITIVE),
                 blockPosition().get(axis) + .5f + posDelta));
         isMoving = true;
         asyncCallbacks.add(callback);
@@ -148,10 +146,12 @@ public class AircraftEntity extends Entity {
 
     public void stall() {
         isStalled = true;
+        setDeltaMovement(0, 0, 0);
     }
 
-    public void cancelStall() {
+    public void cancelStall(Vec3 motionBeforeStall) {
         isStalled = false;
+        setDeltaMovement(motionBeforeStall);
     }
 
     private void rotate(int degree) {
@@ -220,26 +220,6 @@ public class AircraftEntity extends Entity {
         }
     }
 
-    private void tickCollide() {
-        if (horizontalCollision) {
-            getTargetMovement().ifPresent(movement -> {
-                SimpleDirection direction = getSimpleDirection();
-                BlockPos targetPos = blockPosition().relative(direction.getAxis(), direction.getDirectionFactor());
-                double dist = targetPos.get(direction.getAxis()) - position().get(direction.getAxis());
-                if (!isFree(level.getBlockState(targetPos)) && dist < MIN_MOVE_LENGTH) {
-                    // collided with block
-                    Vector3d pos = Common.set(position(), movement.axis, movement.expectedPos);
-                    setPos(pos.x, pos.y, pos.z);
-                    setWaitingMovement(null);
-                    if (isMoving) {
-                        asyncCallbacks.remove().accept(true);
-                    }
-                    isMoving = false;
-                }
-            });
-        }
-    }
-
     private void tryToMove() {
         Optional<AircraftMovement> opt = getTargetMovement();
         if (opt.isPresent()) {
@@ -257,19 +237,9 @@ public class AircraftEntity extends Entity {
 
         setDeltaMovement(Vec3.ZERO);
         if (isMoving) {
-            asyncCallbacks.remove().accept(true);
+            asyncCallbacks.remove().accept(true, true);
         }
         isMoving = false;
-    }
-
-    private boolean isFree(BlockState blockState) {
-        Material material = blockState.getMaterial();
-        return blockState.isAir() || blockState.is(BlockTags.FIRE) || material.isLiquid() || material.isReplaceable();
-    }
-
-    private SimpleDirection getSimpleDirection() {
-        // yRot = [-180, 180]
-        return SimpleDirection.values()[((int) getYRot() / 90 + 2) % 4];
     }
 
     private boolean updateDeltaMovement(double absDistance) {

@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "priority": 1100,
+  "package": "com.luncert.robotcontraption.foundation.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "refmap": "robotcontraption.refmap.json",
+  "mixins": [
+    "MovementContextMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

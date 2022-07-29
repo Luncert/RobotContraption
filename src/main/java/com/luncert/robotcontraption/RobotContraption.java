@@ -1,11 +1,11 @@
 package com.luncert.robotcontraption;
 
 import com.luncert.robotcontraption.config.Config;
-import com.luncert.robotcontraption.content.groups.ModGroup;
-import com.luncert.robotcontraption.content.index.RCBlocks;
-import com.luncert.robotcontraption.content.index.RCEntityTypes;
-import com.luncert.robotcontraption.content.index.RCItems;
-import com.luncert.robotcontraption.content.index.RCTileEntities;
+import com.luncert.robotcontraption.groups.ModGroup;
+import com.luncert.robotcontraption.index.RCBlocks;
+import com.luncert.robotcontraption.index.RCEntityTypes;
+import com.luncert.robotcontraption.index.RCItems;
+import com.luncert.robotcontraption.index.RCTileEntities;
 import com.mojang.logging.LogUtils;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.nullness.NonNullSupplier;
