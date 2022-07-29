@@ -1,14 +1,26 @@
 package com.luncert.robotcontraption.compat.create;
 
+import com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerTileEntity;
+
 public enum AircraftMovementMode {
 
     // Always face toward motion
-    ROTATE,
+    ROTATE(CartAssemblerTileEntity.CartMovementMode.ROTATE),
 
     // Pause actors while rotating
-    ROTATE_PAUSED,
+    ROTATE_PAUSED(CartAssemblerTileEntity.CartMovementMode.ROTATE_PAUSED),
 
     // Lock rotation
-    ROTATION_LOCKED,
+    ROTATION_LOCKED(CartAssemblerTileEntity.CartMovementMode.ROTATION_LOCKED),
     ;
+
+    private final CartAssemblerTileEntity.CartMovementMode mode;
+
+    AircraftMovementMode(CartAssemblerTileEntity.CartMovementMode mode) {
+        this.mode = mode;
+    }
+
+    public CartAssemblerTileEntity.CartMovementMode toCartMovementMode() {
+        return mode;
+    }
 }

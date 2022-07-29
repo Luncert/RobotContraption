@@ -1,7 +1,7 @@
 package com.luncert.robotcontraption.content.aircraft;
 
-import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
+import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.content.common.SimpleDirection;
 import com.luncert.robotcontraption.content.index.RCBlocks;
@@ -82,7 +82,7 @@ public class AircraftEntity extends Entity {
         this.noPhysics = true;
         SimpleDirection blockDirection = SimpleDirection.valueOf(blockState.getValue(HORIZONTAL_FACING).getName().toUpperCase());
         setYRot(blockDirection.getDegree() - 180);
-        setWaitingYRot(getYRot());
+        setTargetYRot(getYRot());
 
         setDeltaMovement(Vec3.ZERO);
     }
@@ -94,6 +94,26 @@ public class AircraftEntity extends Entity {
     }
 
     public void assemble(BlockPos pos, AircraftMovementMode mode) throws AircraftAssemblyException {
+        // AircraftContraption contraption = new AircraftContraption(mode);
+        // try {
+        //     if (!contraption.assemble(level, pos)) {
+        //         return;
+        //     }
+        // } catch (AssemblyException e) {
+        //     throw new AircraftAssemblyException(e);
+        // }
+        //
+        // Direction initialOrientation = blockState.getValue(HORIZONTAL_FACING);
+        //
+        // contraption.removeBlocksFromWorld(level, BlockPos.ZERO);
+        // contraption.startMoving(level);
+        // contraption.expandBoundsAroundAxis(Direction.Axis.Y);
+        //
+        // AircraftContraptionEntity structure = AircraftContraptionEntity.create(level, contraption, initialOrientation);
+        // structure.setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
+        // level.addFreshEntity(structure);
+        // structure.startRiding(this);
+
         AircraftContraption contraption = new AircraftContraption(mode);
         try {
             if (!contraption.assemble(level, pos)) {
@@ -103,20 +123,16 @@ public class AircraftEntity extends Entity {
             throw new AircraftAssemblyException(e);
         }
 
-        Direction initialOrientation = blockState.getValue(HORIZONTAL_FACING);
-
         contraption.removeBlocksFromWorld(level, BlockPos.ZERO);
         contraption.startMoving(level);
         contraption.expandBoundsAroundAxis(Direction.Axis.Y);
 
-        AircraftContraptionEntity structure = AircraftContraptionEntity.create(level, contraption, initialOrientation);
-        structure.setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
-        level.addFreshEntity(structure);
-        structure.startRiding(this);
+        Direction initialOrientation = blockState.getValue(HORIZONTAL_FACING);
+        AircraftContraptionEntity entity = AircraftContraptionEntity.create(level, contraption, initialOrientation);
 
-        // if (contraption.containsBlockBreakers()) {
-        //     award(AllAdvancements.CONTRAPTION_ACTORS);
-        // }
+        entity.setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
+        level.addFreshEntity(entity);
+        entity.startRiding(this);
     }
 
     public void dissemble() {
@@ -138,27 +154,39 @@ public class AircraftEntity extends Entity {
         asyncCallbacks.add(callback);
     }
 
-
-    public void rotate(int degree, AircraftEntityActionCallback callback) throws AircraftMovementException {
+    public void turnLeft(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
         if (isActive()) {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
+        rotate(-90);
+        forward(n, callback);
+    }
+
+    public void turnRight(int n, AircraftEntityActionCallback callback) throws AircraftMovementException {
+        if (isActive()) {
+            throw new AircraftMovementException("cannot_update_moving_aircraft");
+        }
+
+        rotate(90);
+        forward(n, callback);
+    }
+
+    private void rotate(int degree) {
         float yRot = getYRot();
         float waitingYRot = wrapDegrees(yRot + degree);
-        System.out.println(waitingYRot + "  " + yRot + "  " + degree);
-        setWaitingYRot(waitingYRot);
-        if (degree > 0) {
-            if (waitingYRot < yRot) {
-                setYRot(-180);
-            }
-        } else {
-            if (waitingYRot > yRot) {
-                setYRot(180);
-            }
-        }
-        isRotating = true;
-        asyncCallbacks.add(callback);
+        setTargetYRot(waitingYRot);
+        setYRot(waitingYRot);
+        // if (degree > 0) {
+        //     if (waitingYRot < yRot) {
+        //         setYRot(-180);
+        //     }
+        // } else {
+        //     if (waitingYRot > yRot) {
+        //         setYRot(180);
+        //     }
+        // }
+        // isRotating = true;
     }
 
     private boolean isActive() {
@@ -339,7 +367,7 @@ public class AircraftEntity extends Entity {
     private void updateYRot(float deltaYRot) {
         float yRot = getYRot();
         float waitingYRot = wrapDegrees(yRot + deltaYRot);
-        setWaitingYRot(waitingYRot);
+        setTargetYRot(waitingYRot);
         if (deltaYRot > 0) {
             if (waitingYRot < yRot) {
                 setYRot(-180);
@@ -405,7 +433,7 @@ public class AircraftEntity extends Entity {
         return entityData.get(SPEED);
     }
 
-    private void setWaitingYRot(float v) {
+    private void setTargetYRot(float v) {
         entityData.set(TARGET_Y_ROT, v);
     }
 
@@ -439,7 +467,7 @@ public class AircraftEntity extends Entity {
 
         entityData.set(SPEED, compound.getInt("speed"));
         entityData.set(CLOCKWISE_ROTATION, compound.getBoolean("clockwiseRotation"));
-        setWaitingYRot(compound.getFloat("waitingYRot"));
+        setTargetYRot(compound.getFloat("waitingYRot"));
         if (compound.getBoolean("hasWaitingMovement")) {
             compound = compound.getCompound("waitingMovement");
             setWaitingMovement(new AircraftMovement(Direction.Axis.values()[compound.getInt("axis")],
@@ -466,6 +494,11 @@ public class AircraftEntity extends Entity {
     @Override
     public Packet<?> getAddEntityPacket() {
         return new ClientboundAddEntityPacket(this);
+    }
+
+    @Override
+    public double getPassengersRidingOffset() {
+        return 0;
     }
 
     @Override

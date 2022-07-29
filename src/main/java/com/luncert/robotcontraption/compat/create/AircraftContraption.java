@@ -44,12 +44,11 @@ public class AircraftContraption extends Contraption {
     @Override
     // TBD
     public boolean assemble(Level world, BlockPos pos) throws AssemblyException {
-        BlockState state = world.getBlockState(pos);
         if (!searchMovedStructure(world, pos, null))
             return false;
 
-        addBlock(pos, Pair.of(new StructureTemplate.StructureBlockInfo(pos, RCBlocks.AIRCRAFT_ANCHOR.getDefaultState()
-                , null), null));
+        addBlock(pos, Pair.of(new StructureTemplate.StructureBlockInfo(
+                pos, RCBlocks.AIRCRAFT_ANCHOR.getDefaultState(), null), null));
 
         return blocks.size() != 1;
     }
@@ -64,18 +63,14 @@ public class AircraftContraption extends Contraption {
     @Override
     protected Pair<StructureTemplate.StructureBlockInfo, BlockEntity> capture(Level world, BlockPos pos) {
         Pair<StructureTemplate.StructureBlockInfo, BlockEntity> pair = super.capture(world, pos);
+        System.out.println(pair + "-" + getTileEntityNBT(world, pos) + ":" + world.getBlockEntity(pos));
         StructureTemplate.StructureBlockInfo capture = pair.getKey();
         if (!RCBlocks.AIRCRAFT_STATION.has(capture.state)) {
             return pair;
         }
 
-        Pair<StructureTemplate.StructureBlockInfo, BlockEntity> anchorSwap =
-                Pair.of(new StructureTemplate.StructureBlockInfo(pos, AircraftStationBlock.createAnchor(capture.state), null), pair.getValue());
-        if (pos.equals(anchor)) {
-            return anchorSwap;
-        }
-
-        return anchorSwap;
+        return Pair.of(new StructureTemplate.StructureBlockInfo(
+                pos, AircraftStationBlock.createAnchor(capture.state), null), pair.getValue());
     }
 
     @Override
@@ -112,7 +107,7 @@ public class AircraftContraption extends Contraption {
 
     @Override
     public boolean canBeStabilized(Direction facing, BlockPos localPos) {
-        return true;
+        return false;
     }
 
     @Override

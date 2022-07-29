@@ -67,7 +67,7 @@ public class AircraftStationPeripheral implements IPeripheral {
 
     // api
 
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     public final void assemble(String rotationMode) throws LuaException {
         AircraftMovementMode mode;
         try {
@@ -86,7 +86,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         }
     }
 
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     public final void dissemble() throws LuaException {
         if (tileEntity != null) {
             try {
@@ -100,6 +100,9 @@ public class AircraftStationPeripheral implements IPeripheral {
 
     @LuaFunction
     public final MethodResult forward(int n) throws LuaException {
+        if (n <= 0) {
+            throw new LuaException("n must be positive");
+        }
         if (getSpeed() == 0) {
             throw new LuaException("speed is zero");
         }
@@ -118,7 +121,10 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public final MethodResult turnLeft() throws LuaException {
+    public final MethodResult turnLeft(int n) throws LuaException {
+        if (n <= 0) {
+            throw new LuaException("n must be positive");
+        }
         if (getSpeed() == 0) {
             throw new LuaException("speed is zero");
         }
@@ -126,17 +132,20 @@ public class AircraftStationPeripheral implements IPeripheral {
         int executionId = this.executionId++;
         if (tileEntity != null) {
             try {
-                tileEntity.turnLeft(success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE, executionId, success));
+                tileEntity.turnLeft(n, success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, success));
             } catch (AircraftMovementException | AircraftAssemblyException e) {
                 throw new LuaException(e.getMessage());
             }
         }
 
-        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE);
+        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
     @LuaFunction
-    public final MethodResult turnRight() throws LuaException {
+    public final MethodResult turnRight(int n) throws LuaException {
+        if (n <= 0) {
+            throw new LuaException("n must be positive");
+        }
         if (getSpeed() == 0) {
             throw new LuaException("speed is zero");
         }
@@ -144,13 +153,13 @@ public class AircraftStationPeripheral implements IPeripheral {
         int executionId = this.executionId++;
         if (tileEntity != null) {
             try {
-                tileEntity.turnRight(success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE, executionId, success));
+                tileEntity.turnRight(n, success -> queueEvent(AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, success));
             } catch (AircraftMovementException | AircraftAssemblyException e) {
                 throw new LuaException(e.getMessage());
             }
         }
 
-        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_ROTATE_DONE);
+        return AircraftApiCallback.hook(executionId, AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
     @LuaFunction

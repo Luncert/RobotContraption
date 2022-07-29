@@ -1,6 +1,5 @@
 package com.luncert.robotcontraption.content.aircraft;
 
-import com.luncert.robotcontraption.compat.computercraft.AircraftActionEvent;
 import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
@@ -77,18 +76,18 @@ public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
         entity.forward(n, callback);
     }
 
-    public void turnLeft(AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+    public void turnLeft(int n, AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
         if (entity == null) {
             throw new AircraftAssemblyException("aircraft_dissembled");
         }
-        entity.rotate(-90, callback);
+        entity.turnLeft(n, callback);
     }
 
-    public void turnRight(AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+    public void turnRight(int n, AircraftEntityActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
         if (entity == null) {
             throw new AircraftAssemblyException("aircraft_dissembled");
         }
-        entity.rotate(90, callback);
+        entity.turnRight(n, callback);
     }
 
     public boolean setRPM(int rpm) {
