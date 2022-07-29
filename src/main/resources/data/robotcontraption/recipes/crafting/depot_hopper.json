@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern":
+  [" W ",
+    "WSW",
+    " W "],
+  "key": {
+    "W": {
+      "tag": "create:iron_sheet"
+    },
+    "S": {
+      "item": "create:andesite_funnel"
+    }
+  },
+  "result":{
+    "item": "robotcontraption:depot_hopper",
+    "count": 1
+  }
+}

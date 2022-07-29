@@ -1,0 +1,35 @@
+{
+  "type": "create:mechanical_crafting",
+  "pattern": [
+    " BBB ",
+    "HDTDH",
+    "HSJSH",
+    "HTCTH"
+  ],
+  "key": {
+    "H": {
+      "item": "create:brass_casing"
+    },
+    "D": {
+      "item": "create:electron_tube"
+    },
+    "B": {
+      "tag": "minecraft:glass_pane"
+    },
+    "S": {
+      "item": "create:sturdy_sheet"
+    },
+    "T": {
+      "item": "create:copper_sheet"
+    },
+    "C": {
+      "item": "create:cogwheel"
+    },
+    "J": {
+      "item": "create:precision_mechanism"
+    }
+  },
+  "result": {
+    "item": "robotcontraption:aircraft_station"
+  }
+}
