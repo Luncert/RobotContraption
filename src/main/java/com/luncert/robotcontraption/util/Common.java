@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.content.util;
+package com.luncert.robotcontraption.util;
 
 import com.mojang.math.Vector3d;
 import net.minecraft.core.Direction;

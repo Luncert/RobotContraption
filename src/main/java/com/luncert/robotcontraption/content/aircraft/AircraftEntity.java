@@ -4,7 +4,7 @@ import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
-import com.luncert.robotcontraption.content.util.Common;
+import com.luncert.robotcontraption.util.Common;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.luncert.robotcontraption.index.RCBlocks;

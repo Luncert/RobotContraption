@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "robotcontraption:block/fuel_engine/block",
+      "y": 180
+    },
+    "facing=south": {
+      "model": "robotcontraption:block/fuel_engine/block",
+      "y": 0
+    },
+    "facing=west": {
+      "model": "robotcontraption:block/fuel_engine/block",
+      "y": 90
+    },
+    "facing=east": {
+      "model": "robotcontraption:block/fuel_engine/block",
+      "y": 270
+    }
+  }
+}

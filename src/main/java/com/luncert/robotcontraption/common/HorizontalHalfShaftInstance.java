@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.content.aircraft;
+package com.luncert.robotcontraption.common;
 
 import com.jozufozu.flywheel.api.Instancer;
 import com.jozufozu.flywheel.api.MaterialManager;
@@ -9,18 +9,18 @@ import com.simibubi.create.content.contraptions.base.flwdata.RotatingData;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
-public class AircraftStationInstance extends SingleRotatingInstance {
+public class HorizontalHalfShaftInstance extends SingleRotatingInstance {
 
-    public AircraftStationInstance(MaterialManager modelManager, KineticTileEntity tile) {
+    public HorizontalHalfShaftInstance(MaterialManager modelManager, KineticTileEntity tile) {
         super(modelManager, tile);
     }
 
     protected Instancer<RotatingData> getModel() {
         Direction dir = this.getShaftDirection();
-        return this.getRotatingMaterial().getModel(AllBlockPartials.SHAFT_HALF, this.blockState, dir);
+        return getRotatingMaterial().getModel(AllBlockPartials.SHAFT_HALF, this.blockState, dir);
     }
 
     protected Direction getShaftDirection() {
-        return (Direction)this.blockState.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        return blockState.getValue(BlockStateProperties.HORIZONTAL_FACING);
     }
 }

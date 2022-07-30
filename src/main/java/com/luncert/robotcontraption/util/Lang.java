@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.content.util;
+package com.luncert.robotcontraption.util;
 
 import java.util.ArrayList;
 import java.util.List;

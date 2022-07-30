@@ -35,15 +35,10 @@ public class AircraftStationBlock extends HorizontalKineticBlock implements ITE<
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Direction prefferedSide = getPreferredHorizontalFacing(context);
-        if (prefferedSide != null)
-            return defaultBlockState().setValue(HORIZONTAL_FACING, prefferedSide);
+        Direction preferredSide = getPreferredHorizontalFacing(context);
+        if (preferredSide != null)
+            return defaultBlockState().setValue(HORIZONTAL_FACING, preferredSide);
         return super.getStateForPlacement(context);
-    }
-
-    @Override
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return RCTileEntities.AIRCRAFT_STATION.create(pos, state);
     }
 
     @Override

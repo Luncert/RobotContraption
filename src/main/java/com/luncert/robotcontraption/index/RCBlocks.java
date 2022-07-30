@@ -3,6 +3,7 @@ package com.luncert.robotcontraption.index;
 import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperItem;
+import com.luncert.robotcontraption.content.fuelengine.FuelEngineBlock;
 import com.luncert.robotcontraption.groups.ModGroup;
 import com.luncert.robotcontraption.content.aircraft.AircraftAnchorBlock;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
@@ -14,6 +15,7 @@ import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.simibubi.create.repack.registrate.util.entry.BlockEntry;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MaterialColor;
 
 import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
 
@@ -46,6 +48,17 @@ public class RCBlocks {
                     .initialProperties(SharedProperties::stone)
                     .blockstate((c, p) -> p.simpleBlock(c.get(), p.models()
                             .getExistingFile(p.modLoc("block/aircraft_station/" + c.getName()))))
+                    .register();
+
+    public static final BlockEntry<FuelEngineBlock> FUEL_ENGINE =
+            REGISTRATE.block("fuel_engine", FuelEngineBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(p -> p.color(MaterialColor.PODZOL))
+                    .properties(BlockBehaviour.Properties::noOcclusion)
+                    .transform(BlockStressDefaults.setCapacity(512d))
+                    .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .item()
+                    .transform(customItemModel())
                     .register();
 
     public static void register() {

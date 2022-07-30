@@ -3,11 +3,10 @@ package com.luncert.robotcontraption.content.aircraft;
 import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
-import com.luncert.robotcontraption.config.Config;
 import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
-import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
+import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -16,11 +15,9 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class AircraftStationTileEntity extends GeneratingKineticTileEntity {
+public class AircraftStationTileEntity extends KineticTileEntity {
 
-    private static final Integer RPM_RANGE = Config.ROBOT_RPM_RANGE.get();
-
-    private LazyOptional<AircraftStationPeripheral> peripheral;
+    private final LazyOptional<AircraftStationPeripheral> peripheral;
     private AircraftEntity entity;
 
     public AircraftStationTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {

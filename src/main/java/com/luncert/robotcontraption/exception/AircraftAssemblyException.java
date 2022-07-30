@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.exception;
 
-import com.luncert.robotcontraption.content.util.Lang;
+import com.luncert.robotcontraption.util.Lang;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 
 public class AircraftAssemblyException extends AssemblyException {
