@@ -1,6 +1,5 @@
 package com.luncert.robotcontraption;
 
-import com.jozufozu.flywheel.core.PartialModel;
 import com.luncert.robotcontraption.config.Config;
 import com.luncert.robotcontraption.groups.ModGroup;
 import com.luncert.robotcontraption.index.*;
@@ -10,7 +9,6 @@ import com.simibubi.create.repack.registrate.util.nullness.NonNullSupplier;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -20,8 +18,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
-
-import java.lang.reflect.Field;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(Reference.MOD_ID)
@@ -49,12 +45,12 @@ public class RobotContraption
         IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
 
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            modEventBus.addListener(EventPriority.HIGHEST, RobotContraption::clientInit);
+            RCBlockPartials.init();
+            modEventBus.addListener(RobotContraption::clientInit);
         });
     }
 
     public static void clientInit(final FMLClientSetupEvent event) {
-        RCBlockPartials.init();
     }
 
     public static CreateRegistrate registrate() {
