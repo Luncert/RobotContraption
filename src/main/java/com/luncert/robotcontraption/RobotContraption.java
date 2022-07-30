@@ -1,25 +1,27 @@
 package com.luncert.robotcontraption;
 
+import com.jozufozu.flywheel.core.PartialModel;
 import com.luncert.robotcontraption.config.Config;
 import com.luncert.robotcontraption.groups.ModGroup;
-import com.luncert.robotcontraption.index.RCBlocks;
-import com.luncert.robotcontraption.index.RCEntityTypes;
-import com.luncert.robotcontraption.index.RCItems;
-import com.luncert.robotcontraption.index.RCTileEntities;
+import com.luncert.robotcontraption.index.*;
 import com.mojang.logging.LogUtils;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.nullness.NonNullSupplier;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
+
+import java.lang.reflect.Field;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(Reference.MOD_ID)
@@ -46,7 +48,13 @@ public class RobotContraption
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
 
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> RobotContraptionClient.onCtorClient(modEventBus, forgeEventBus));
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+            modEventBus.addListener(EventPriority.HIGHEST, RobotContraption::clientInit);
+        });
+    }
+
+    public static void clientInit(final FMLClientSetupEvent event) {
+        RCBlockPartials.init();
     }
 
     public static CreateRegistrate registrate() {
