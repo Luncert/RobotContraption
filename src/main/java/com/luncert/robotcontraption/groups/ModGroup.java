@@ -8,11 +8,14 @@ import net.minecraft.world.item.ItemStack;
 
 public class ModGroup extends CreativeModeTab {
 
-    public static ModGroup MAIN;;
+    public static ModGroup MAIN;
 
-    public ModGroup(String name) {
+    public static void init() {
+        MAIN = new ModGroup("main");
+    }
+
+    private ModGroup(String name) {
         super(Reference.MOD_ID + ":" + name);
-        MAIN = this;
     }
 
     @Override

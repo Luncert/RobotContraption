@@ -11,12 +11,15 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.AllSections;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
+import com.simibubi.create.foundation.data.BlockStateGen;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.simibubi.create.repack.registrate.util.entry.BlockEntry;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MaterialColor;
 
+import static com.simibubi.create.AllTags.axeOrPickaxe;
 import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
 
 
@@ -29,7 +32,7 @@ public class RCBlocks {
             REGISTRATE.block("aircraft_station", AircraftStationBlock::new)
                     .initialProperties(SharedProperties::stone)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag) //Dono what this tag means (contraption safe?).
-                    .transform(BlockStressDefaults.setImpact(512 / 256d))
+                    .transform(BlockStressDefaults.setImpact(4d))
                     .item()
                     .transform(customItemModel())
                     .register();
@@ -55,6 +58,9 @@ public class RCBlocks {
                     .initialProperties(SharedProperties::stone)
                     .properties(p -> p.color(MaterialColor.PODZOL))
                     .properties(BlockBehaviour.Properties::noOcclusion)
+                    .blockstate(BlockStateGen.directionalBlockProvider(true))
+                    .addLayer(() -> RenderType::cutoutMipped)
+                    .transform(axeOrPickaxe())
                     .transform(BlockStressDefaults.setCapacity(512d))
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
                     .item()

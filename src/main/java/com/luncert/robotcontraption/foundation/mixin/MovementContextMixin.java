@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(MovementContext.class)
+@Mixin(value = MovementContext.class, remap = false)
 public class MovementContextMixin {
 
     @Shadow
@@ -20,7 +20,7 @@ public class MovementContextMixin {
     @Shadow
     public Contraption contraption;
 
-    @Inject(at = @At("HEAD"), method = "getAnimationSpeed", cancellable = true, remap = false)
+    @Inject(at = @At("HEAD"), method = "getAnimationSpeed", cancellable = true)
     public void getAnimationSpeedMixin(CallbackInfoReturnable<Float> cir) {
         System.out.println("it's working !!!!!!!!!!!");
         if (!world.isClientSide && contraption instanceof AircraftContraption) {

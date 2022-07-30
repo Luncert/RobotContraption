@@ -60,3 +60,22 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mollis lacinia magn
     versionRange="[1.18.2,1.19)"
     ordering="NONE"
     side="BOTH"
+[[dependencies.robotcontraption]]
+    modId="create"
+    mandatory=true
+    versionRange="[0.5a,0.6)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.robotcontraption]]
+    modId="flywheel"
+    mandatory=true
+    versionRange="[1.18-0.6.2,1.18-0.7.0)"
+    ordering="AFTER"
+    side="CLIENT"
+[[dependencies.robotcontraption]]
+    modId="computercraft"
+    mandatory=true
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"
+
