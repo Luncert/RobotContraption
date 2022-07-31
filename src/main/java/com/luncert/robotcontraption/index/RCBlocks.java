@@ -59,7 +59,7 @@ public class RCBlocks {
                     .properties(p -> p.color(MaterialColor.PODZOL))
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .blockstate(BlockStateGen.directionalBlockProvider(true))
-                    .addLayer(() -> RenderType::cutoutMipped)
+                    .addLayer(() -> RenderType::translucent)
                     .transform(axeOrPickaxe())
                     .transform(BlockStressDefaults.setCapacity(512d))
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
