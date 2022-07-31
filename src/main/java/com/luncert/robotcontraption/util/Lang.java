@@ -29,6 +29,10 @@ public class Lang {
         return new TranslatableComponent(Reference.MOD_ID + "." + key, resolveBuilders(args));
     }
 
+    public static TranslatableComponent translateRaw(String key, Object... args) {
+        return new TranslatableComponent(key, resolveBuilders(args));
+    }
+
     public static String asId(String name) {
         return name.toLowerCase(Locale.ROOT);
     }
