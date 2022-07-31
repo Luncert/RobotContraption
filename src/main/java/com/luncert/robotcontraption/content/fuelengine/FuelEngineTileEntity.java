@@ -2,23 +2,21 @@ package com.luncert.robotcontraption.content.fuelengine;
 
 import com.luncert.robotcontraption.common.Capabilities;
 import com.luncert.robotcontraption.index.RCBlocks;
+import com.luncert.robotcontraption.util.Common;
 import com.luncert.robotcontraption.util.Lang;
 import com.mrh0.createaddition.index.CAFluids;
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
-import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.tileEntity.TileEntityBehaviour;
-import com.simibubi.create.foundation.tileEntity.behaviour.CenteredSideValueBoxTransform;
-import com.simibubi.create.foundation.tileEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.tileEntity.behaviour.scrollvalue.ScrollValueBehaviour;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 import org.jetbrains.annotations.NotNull;
@@ -26,29 +24,36 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-import static com.simibubi.create.content.logistics.block.funnel.AbstractHorizontalFunnelBlock.HORIZONTAL_FACING;
-
 public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
-
-    private final FluidStack seedOil = new FluidStack(FluidHelper.convertToStill(CAFluids.SEED_OIL.get()), 1000);
-    private final FluidStack bioethanol = new FluidStack(FluidHelper.convertToStill(CAFluids.BIOETHANOL.get()), 1000);
 
     private final LazyOptional<FuelEngineComponent> component;
     private final LazyOptional<FluidTank> fluidTank;
 
     private boolean active = false;
     protected ScrollValueBehaviour generatedSpeed;
+
     private boolean cc_update_rpm = false;
     private int cc_new_rpm = 32;
-    int cc_antiSpam = 0;
-    boolean first = true;
+
+    private int cc_antiSpam = 0;
+    private boolean first = true;
 
     public FuelEngineTileEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
 
         component = LazyOptional.of(FuelEngineComponent::new);
         fluidTank = LazyOptional.of(() ->
-                new FluidTank(1000, fluid -> fluid.containsFluid(seedOil) || fluid.containsFluid(bioethanol)));
+                new FluidTank(1000, fluidStack -> {
+                    Fluid fluid = fluidStack.getFluid();
+                    return Common.compareFluidKinds(fluid, CAFluids.SEED_OIL.get())
+                            || Common.compareFluidKinds(fluid, CAFluids.BIOETHANOL.get());
+                    // ResourceLocation fluidId = fluidStack.getFluid().getRegistryName();
+                    // if (fluidId == null) {
+                    //     return false;
+                    // }
+                    // return fluidId.equals(CAFluids.SEED_OIL.get().getRegistryName())
+                    //         || fluidId.equals(CAFluids.BIOETHANOL.get().getRegistryName());
+                }));
     }
 
     @Override
@@ -128,9 +133,7 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
             return;
 
         int con = getFuelConsumptionRate(generatedSpeed.getValue());
-        System.out.println(con + " " + getGeneratedSpeed() + " " + generatedSpeed.getValue());
         fluidTank.ifPresent(t -> {
-            System.out.println(active + " " + t.getFluidAmount());
             if (!active) {
                 if (t.getFluidAmount() > con * 2) {
                     active = true;
@@ -148,8 +151,8 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
 
     private int getFuelConsumptionRate(int rpm) {
         int consumptionFactor = fluidTank.map(t -> {
-            FluidStack fluid = t.getFluid();
-            if (fluid.containsFluid(seedOil)) {
+            Fluid fluid = t.getFluid().getFluid();
+            if (Common.compareFluidKinds(fluid, CAFluids.SEED_OIL.get())) {
                 return 10;
             } else {
                 return 5;

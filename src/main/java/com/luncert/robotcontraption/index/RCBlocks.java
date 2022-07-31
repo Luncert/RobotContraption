@@ -61,7 +61,7 @@ public class RCBlocks {
                     .blockstate(BlockStateGen.directionalBlockProvider(true))
                     .addLayer(() -> RenderType::translucent)
                     .transform(axeOrPickaxe())
-                    .transform(BlockStressDefaults.setCapacity(512d))
+                    .transform(BlockStressDefaults.setCapacity(64d))
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
                     .item()
                     .transform(customItemModel())

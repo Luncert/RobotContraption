@@ -2,7 +2,10 @@ package com.luncert.robotcontraption.util;
 
 import com.mojang.math.Vector3d;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.fluids.ForgeFlowingFluid;
 
 public class Common {
 
@@ -27,5 +30,23 @@ public class Common {
             case Y -> new Vector3d(v.x, value, v.z);
             case Z -> new Vector3d(v.x, v.y, value);
         };
+    }
+
+    public static boolean compareFluidKinds(Fluid a, Fluid b) {
+        if (a == b) {
+            return true;
+        }
+        if (a == Fluids.WATER) {
+            return b == Fluids.FLOWING_WATER;
+        }
+        if (a == Fluids.LAVA) {
+            return b == Fluids.FLOWING_LAVA;
+        }
+        if (a instanceof ForgeFlowingFluid fa) {
+            if (b instanceof ForgeFlowingFluid fb) {
+                return fa.getSource() == fb.getSource();
+            }
+        }
+        return false;
     }
 }
