@@ -179,20 +179,8 @@ public class AircraftEntity extends Entity {
         super.tick();
         tickLerp();
 
-        if (isControlledByLocalInstance()) {
-            // if contraption is stalled, stop movement
-            // List<Entity> passengers = getPassengers();
-            // if (!passengers.isEmpty() && passengers.get(0) instanceof AircraftContraptionEntity rider) {
-            //     contraptionStalled = rider.isStalled();
-            // }
-
-            if (!isStalled) {
-                tryToMove();
-            }
-
-            this.move(MoverType.SELF, this.getDeltaMovement());
-        } else {
-            this.setDeltaMovement(Vec3.ZERO);
+        if (!isStalled) {
+            updateMotion().ifPresent(motion -> move(MoverType.SELF, this.getDeltaMovement().add(motion)));
         }
 
         // tickCollide();
@@ -220,34 +208,34 @@ public class AircraftEntity extends Entity {
         }
     }
 
-    private void tryToMove() {
+    private Optional<Vec3> updateMotion() {
         Optional<AircraftMovement> opt = getTargetMovement();
         if (opt.isPresent()) {
             AircraftMovement movement = opt.get();
             double v = position().get(movement.axis);
             if (v != movement.expectedPos) {
                 double absDist = Math.abs(movement.expectedPos - v);
-                if (absDist != 0 && updateDeltaMovement(absDist)) {
-
-                    return;
+                if (absDist != 0) {
+                    return updateDeltaMovement(absDist);
                 }
             }
             setWaitingMovement(null);
         }
 
         setDeltaMovement(Vec3.ZERO);
-        if (isMoving) {
-            asyncCallbacks.remove().accept(true, true);
+        if (isMoving && isControlledByLocalInstance()) {
+            asyncCallbacks.remove().accept(true);
         }
         isMoving = false;
+        return Optional.empty();
     }
 
-    private boolean updateDeltaMovement(double absDistance) {
+    private Optional<Vec3> updateDeltaMovement(double absDistance) {
         return getTargetMovement().map(movement -> {
             if (absDistance < MIN_MOVE_LENGTH) {
                 Vector3d pos = Common.set(position(), movement.axis, movement.expectedPos);
                 setPos(pos.x, pos.y, pos.z);
-                return false;
+                return null;
             }
 
             double x = 0, z = 0;
@@ -264,9 +252,8 @@ public class AircraftEntity extends Entity {
                 x = speed;
             }
 
-            setDeltaMovement(x, 0, z);
-            return true;
-        }).orElse(false);
+            return new Vec3(x, 0, z);
+        });
     }
 
     private float wrapDegrees(float d) {
