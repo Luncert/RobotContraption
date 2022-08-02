@@ -62,20 +62,20 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         entity.forward(n, callback);
     }
 
-    public void turnLeft(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+    public void turnLeft(ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
         checkContraptionStatus();
         if (getAircraftSpeed() == 0) {
             throw new AircraftMovementException("speed_is_zero");
         }
-        entity.turnLeft(n, callback);
+        entity.turnLeft(callback);
     }
 
-    public void turnRight(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+    public void turnRight(ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
         checkContraptionStatus();
         if (getAircraftSpeed() == 0) {
             throw new AircraftMovementException("speed_is_zero");
         }
-        entity.turnRight(n, callback);
+        entity.turnRight(callback);
     }
 
     public void setAircraftSpeed(int speed) throws AircraftAssemblyException {
@@ -86,6 +86,11 @@ public class AircraftStationTileEntity extends KineticTileEntity {
     public int getAircraftSpeed() throws AircraftAssemblyException {
         checkContraptionStatus();
         return entity.getSpeed();//generatedSpeed.getValue();
+    }
+
+    public Vec3 getPosition() throws AircraftAssemblyException {
+        checkContraptionStatus();
+        return entity.getAircraftPosition();
     }
 
     private void checkContraptionStatus() throws AircraftAssemblyException {

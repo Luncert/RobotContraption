@@ -29,7 +29,6 @@ public class AircraftApiCallback implements ILuaCallback {
     @NotNull
     @Override
     public MethodResult resume(Object[] response) throws LuaException {
-        LOGGER.info("received response for {}: {}", executionId, Arrays.toString(response));
         // 0 is event name
         if (response.length == 3
                 && response[1] instanceof Number

@@ -22,7 +22,6 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -31,6 +30,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
@@ -49,7 +49,6 @@ public class AircraftEntity extends Entity {
     private BlockState blockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
 
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
-    private boolean isStalled;
     public boolean isMoving;
 
     private int lerpSteps;
@@ -126,32 +125,30 @@ public class AircraftEntity extends Entity {
         asyncCallbacks.add(callback);
     }
 
-    public void turnLeft(int n, ActionCallback callback) throws AircraftMovementException {
+    public void turnLeft(ActionCallback callback) throws AircraftMovementException {
+        rotate(-90, callback);
+    }
+
+    public void turnRight(ActionCallback callback) throws AircraftMovementException {
+        rotate(90, callback);
+    }
+
+    private void rotate(int degree, ActionCallback callback) throws AircraftMovementException {
         if (isMoving) {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        rotate(-90);
-        forward(n, callback);
+        int currentSpeed = getSpeed();
+        setSpeed(32);
+        rotate(degree);
+        forward(1, data -> {
+            setSpeed(currentSpeed);
+            callback.accept(data);
+        });
     }
 
-    public void turnRight(int n, ActionCallback callback) throws AircraftMovementException {
-        if (isMoving) {
-            throw new AircraftMovementException("cannot_update_moving_aircraft");
-        }
-
-        rotate(90);
-        forward(n, callback);
-    }
-
-    public void stall() {
-        isStalled = true;
-        setDeltaMovement(0, 0, 0);
-    }
-
-    public void cancelStall(Vec3 motionBeforeStall) {
-        isStalled = false;
-        setDeltaMovement(motionBeforeStall);
+    public Vec3 getAircraftPosition() {
+        return position();
     }
 
     private void rotate(int degree) {
@@ -179,8 +176,20 @@ public class AircraftEntity extends Entity {
         super.tick();
         tickLerp();
 
+        boolean isStalled = false;
+        List<Entity> passengers = getPassengers();
+        if (!passengers.isEmpty()) {
+            Entity entity = passengers.get(0);
+            if (entity instanceof AircraftContraptionEntity contraptionEntity) {
+                isStalled = contraptionEntity.isStalled();
+            }
+        }
         if (!isStalled) {
-            updateMotion().ifPresent(motion -> move(MoverType.SELF, this.getDeltaMovement().add(motion)));
+            updateMotion().ifPresent(motion -> {
+                System.out.println(level.isClientSide + " " + motion);
+                setDeltaMovement(motion);
+                setPos(getX() + motion.x, getY() + motion.y, getZ() + motion.z);
+            });
         }
 
         // tickCollide();
@@ -216,6 +225,7 @@ public class AircraftEntity extends Entity {
             if (v != movement.expectedPos) {
                 double absDist = Math.abs(movement.expectedPos - v);
                 if (absDist != 0) {
+                    System.out.println(absDist);
                     return updateDeltaMovement(absDist);
                 }
             }
