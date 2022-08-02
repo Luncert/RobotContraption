@@ -29,10 +29,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 
 import static com.luncert.robotcontraption.content.aircraft.AircraftMovement.MOVEMENT_SERIALIZER;
 import static com.simibubi.create.content.contraptions.base.HorizontalKineticBlock.HORIZONTAL_FACING;
@@ -43,6 +40,8 @@ public class AircraftEntity extends Entity {
 
     private static final EntityDataAccessor<Integer> SPEED =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> TARGET_Y_ROT =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Optional<AircraftMovement>> TARGET_MOVEMENT =
             SynchedEntityData.defineId(AircraftEntity.class, MOVEMENT_SERIALIZER);
 
@@ -115,7 +114,7 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        Direction direction = Direction.fromYRot(getYRot());
+        Direction direction = Direction.fromYRot(getTargetYRot());
         Direction.Axis axis = direction.getAxis();
         Direction.AxisDirection axisDirection = direction.getAxisDirection();
         int posDelta = axisDirection.getStep() * n;
@@ -138,21 +137,18 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        int currentSpeed = getSpeed();
-        setSpeed(32);
-        rotate(degree);
-        forward(1, data -> {
-            setSpeed(currentSpeed);
-            callback.accept(data);
-        });
+        float targetYRot = getTargetYRot() + degree;
+        if (targetYRot < 0) {
+            targetYRot += 360;
+        } else if (targetYRot > 360) {
+            targetYRot -= 360;
+        }
+        setTargetYRot(targetYRot);
+        forward(1, callback);
     }
 
     public Vec3 getAircraftPosition() {
         return position();
-    }
-
-    private void rotate(int degree) {
-        setYRot(wrapDegrees(getYRot() + degree));
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -186,7 +182,6 @@ public class AircraftEntity extends Entity {
         }
         if (!isStalled) {
             updateMotion().ifPresent(motion -> {
-                System.out.println(level.isClientSide + " " + motion);
                 setDeltaMovement(motion);
                 setPos(getX() + motion.x, getY() + motion.y, getZ() + motion.z);
             });
@@ -208,12 +203,14 @@ public class AircraftEntity extends Entity {
             double d0 = this.getX() + (this.lerpX - this.getX()) / (double)this.lerpSteps;
             double d1 = this.getY() + (this.lerpY - this.getY()) / (double)this.lerpSteps;
             double d2 = this.getZ() + (this.lerpZ - this.getZ()) / (double)this.lerpSteps;
+            this.setPos(d0, d1, d2);
+
             double d3 = Mth.wrapDegrees(this.lerpYRot - getYRot());
             setYRot((float)((double)getYRot() + d3 / (double)this.lerpSteps));
             setXRot((float)((double)getXRot() + (this.lerpXRot - (double)getXRot()) / (double)this.lerpSteps));
-            --this.lerpSteps;
-            this.setPos(d0, d1, d2);
             this.setRot(getYRot(), getXRot());
+
+            --this.lerpSteps;
         }
     }
 
@@ -225,8 +222,7 @@ public class AircraftEntity extends Entity {
             if (v != movement.expectedPos) {
                 double absDist = Math.abs(movement.expectedPos - v);
                 if (absDist != 0) {
-                    System.out.println(absDist);
-                    return updateDeltaMovement(absDist);
+                    return Optional.ofNullable(updateMotion(absDist, movement));
                 }
             }
             setWaitingMovement(null);
@@ -240,30 +236,34 @@ public class AircraftEntity extends Entity {
         return Optional.empty();
     }
 
-    private Optional<Vec3> updateDeltaMovement(double absDistance) {
-        return getTargetMovement().map(movement -> {
-            if (absDistance < MIN_MOVE_LENGTH) {
-                Vector3d pos = Common.set(position(), movement.axis, movement.expectedPos);
-                setPos(pos.x, pos.y, pos.z);
-                return null;
-            }
+    private Vec3 updateMotion(double absDistance, AircraftMovement movement) {
+        if (absDistance < MIN_MOVE_LENGTH) {
+            Vector3d pos = Common.set(position(), movement.axis, movement.expectedPos);
+            setPos(pos.x, pos.y, pos.z);
+            setYRot(getTargetYRot());
+            return null;
+        }
 
-            double x = 0, z = 0;
+        double linearMotion;
+        if (getYRot() != getTargetYRot()) {
+            linearMotion = Math.min(getMovementSpeed(32), absDistance);
+        } else {
+            linearMotion = Math.min(getMovementSpeed(), absDistance);
+        }
 
-            double speed = Math.min(getMovementSpeed(), absDistance);
-            if (!movement.positive) {
-                speed = -speed;
-            }
+        if (!movement.positive) {
+            linearMotion = -linearMotion;
+        }
 
-            // movement over y axis is not supported for now
-            if (Direction.Axis.Z.equals(movement.axis)) {
-                z = speed;
-            } else {
-                x = speed;
-            }
+        // movement over y axis is not supported for now
+        double x = 0, z = 0;
+        if (Direction.Axis.Z.equals(movement.axis)) {
+            z = linearMotion;
+        } else {
+            x = linearMotion;
+        }
 
-            return new Vec3(x, 0, z);
-        });
+        return new Vec3(x, 0, z);
     }
 
     private float wrapDegrees(float d) {
@@ -271,11 +271,11 @@ public class AircraftEntity extends Entity {
     }
 
     private float getMovementSpeed() {
-        return 1.5f * getLinearSpeed();
+        return getSpeed() / 512f * 1.5f;
     }
 
-    private float getLinearSpeed() {
-        return getSpeed() / 512f;
+    private float getMovementSpeed(int speed) {
+        return speed / 512f * 1.5f;
     }
 
     public void setSpeed(int speed) {
@@ -284,6 +284,14 @@ public class AircraftEntity extends Entity {
 
     public int getSpeed() {
         return entityData.get(SPEED);
+    }
+
+    public void setTargetYRot(float yRot) {
+        entityData.set(TARGET_Y_ROT, yRot % 360);
+    }
+
+    public float getTargetYRot() {
+        return entityData.get(TARGET_Y_ROT);
     }
 
     public void setWaitingMovement(@Nullable AircraftMovement movement) {
@@ -300,6 +308,7 @@ public class AircraftEntity extends Entity {
     protected void defineSynchedData() {
         entityData.clearDirty();
         entityData.define(SPEED, 32);
+        entityData.define(TARGET_Y_ROT, 0f);
         entityData.define(TARGET_MOVEMENT, Optional.empty());
     }
 
@@ -309,6 +318,7 @@ public class AircraftEntity extends Entity {
             return;
 
         entityData.set(SPEED, compound.getInt("speed"));
+        entityData.set(TARGET_Y_ROT, compound.getFloat("targetYRot"));
         if (compound.getBoolean("hasWaitingMovement")) {
             compound = compound.getCompound("waitingMovement");
             setWaitingMovement(new AircraftMovement(Direction.Axis.values()[compound.getInt("axis")],
@@ -319,6 +329,7 @@ public class AircraftEntity extends Entity {
     @Override
     protected void addAdditionalSaveData(CompoundTag compound) {
         compound.putInt("speed", getSpeed());
+        compound.putFloat("targetYRot", getTargetYRot());
         Optional<AircraftMovement> opt = getTargetMovement();
         compound.putBoolean("hasWaitingMovement", opt.isPresent());
         opt.ifPresent(movement -> {
