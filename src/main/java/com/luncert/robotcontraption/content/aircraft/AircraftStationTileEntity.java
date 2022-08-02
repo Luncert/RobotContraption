@@ -140,7 +140,9 @@ public class AircraftStationTileEntity extends KineticTileEntity {
     public void tick() {
         super.tick();
 
-        if (entity == null) {
+        if (!level.isClientSide && entity == null) {
+            System.out.println(entityId);
+            System.out.println(level.getEntity(entityId));
             if (level.getEntity(entityId) instanceof AircraftEntity aircraftEntity) {
                 this.entity = aircraftEntity;
             }
