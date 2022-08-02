@@ -4,17 +4,25 @@ import com.luncert.robotcontraption.common.Capabilities;
 import com.luncert.robotcontraption.index.RCBlocks;
 import com.luncert.robotcontraption.util.Common;
 import com.luncert.robotcontraption.util.Lang;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrh0.createaddition.index.CAFluids;
+import com.simibubi.create.Create;
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
+import com.simibubi.create.content.contraptions.particle.AirFlowParticleData;
+import com.simibubi.create.content.contraptions.particle.RotationIndicatorParticleData;
 import com.simibubi.create.foundation.tileEntity.TileEntityBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.scrollvalue.ScrollValueBehaviour;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
@@ -23,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Random;
 
 public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
 
@@ -117,20 +126,22 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
     public void tick() {
         super.tick();
 
-        if(first) {
+        if (first) {
             updateGeneratedRotation();
             first = false;
         }
 
-        if(cc_update_rpm && cc_antiSpam > 0) {
+        if (cc_update_rpm && cc_antiSpam > 0) {
             generatedSpeed.setValue(cc_new_rpm);
             cc_update_rpm = false;
             cc_antiSpam--;
             updateGeneratedRotation();
         }
 
-        if(level.isClientSide())
+        if (level.isClientSide()) {
+            tickParticles();
             return;
+        }
 
         int con = getFuelConsumptionRate(generatedSpeed.getValue());
         fluidTank.ifPresent(t -> {
@@ -159,6 +170,17 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
             }
         }).orElse(0);
         return (int) (rpm / 256d * consumptionFactor);
+    }
+
+    private void tickParticles() {
+        if (getSpeed() <= 0) {
+            return;
+        }
+        BlockPos pos = getBlockPos();
+        Random rand = Create.RANDOM;
+        level.addParticle(new AirFlowParticleData(),
+                pos.getX() + rand.nextDouble(), pos.getY() + .5, pos.getZ() + rand.nextDouble(),
+                0, 0, 0);
     }
 
     @Override
