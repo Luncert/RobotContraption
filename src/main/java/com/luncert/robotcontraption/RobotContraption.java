@@ -36,6 +36,7 @@ public class RobotContraption
         RCTileEntities.register();
         RCItems.register();
         RCEntityTypes.register();
+        RCContraptionTypes.register();
 
         // register config and load config from file
         Config.loadConfig(Config.COMMON_CONFIG, FMLPaths.CONFIGDIR.get().resolve("robotcontraption-common.toml"));

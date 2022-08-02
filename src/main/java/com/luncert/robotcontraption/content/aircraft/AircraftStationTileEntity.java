@@ -1,14 +1,15 @@
 package com.luncert.robotcontraption.content.aircraft;
 
+import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
-import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -36,7 +37,10 @@ public class AircraftStationTileEntity extends KineticTileEntity {
 
         AircraftEntity aircraft = new AircraftEntity(level, worldPosition, getBlockState());
         level.addFreshEntity(aircraft);
-        aircraft.assemble(worldPosition, mode);
+        if (!aircraft.assemble(worldPosition, mode)) {
+            aircraft.discard();
+            throw new AircraftAssemblyException("structure_not_found");
+        }
         this.entity = aircraft;
     }
 
@@ -45,8 +49,6 @@ public class AircraftStationTileEntity extends KineticTileEntity {
 
         Vec3 blockPos = Vec3.atCenterOf(getBlockPos()).add(0, -0.5, 0);
         if (!blockPos.equals(entity.position())) {
-            System.out.println(blockPos);
-            System.out.println(entity.position());
             throw new AircraftAssemblyException("not_dissemble_at_station");
         }
 
@@ -115,11 +117,20 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         peripheral.invalidate();
     }
 
-    // mc
-
+    @Override
+    protected void read(CompoundTag compound, boolean clientPacket) {
+        super.read(compound, clientPacket);
+        if (this.entity == null) {
+            int entityId = compound.getInt("aircraftEntityId");
+            this.entity = (AircraftEntity) level.getEntity(entityId);
+        }
+    }
 
     @Override
-    public void tick() {
-        super.tick();
+    protected void write(CompoundTag compound, boolean clientPacket) {
+        super.write(compound, clientPacket);
+        if (this.entity != null) {
+            this.entity.save(compound.getCompound("aircraftEntityId"));
+        }
     }
 }

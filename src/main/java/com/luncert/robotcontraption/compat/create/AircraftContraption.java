@@ -22,9 +22,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Queue;
 
-public class AircraftContraption extends Contraption {
+import static com.luncert.robotcontraption.index.RCContraptionTypes.AIRCRAFT;
 
-    private static final ContraptionType AIRCRAFT = ContraptionType.register("aircraft", AircraftContraption::new);
+public class AircraftContraption extends Contraption {
 
     public AircraftMovementMode rotationMode;
 
