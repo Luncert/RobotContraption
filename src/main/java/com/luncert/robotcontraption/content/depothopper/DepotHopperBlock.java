@@ -13,6 +13,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 public class DepotHopperBlock extends Block implements ITE<DepotHopperTileEntity> {
 
@@ -32,7 +33,7 @@ public class DepotHopperBlock extends Block implements ITE<DepotHopperTileEntity
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(HORIZONTAL_FACING);
         super.createBlockStateDefinition(builder);
     }
 

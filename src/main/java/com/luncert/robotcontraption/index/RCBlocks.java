@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MaterialColor;
 
 import static com.simibubi.create.AllTags.axeOrPickaxe;
+import static com.simibubi.create.AllTags.pickaxeOnly;
 import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
 
 
@@ -61,7 +62,6 @@ public class RCBlocks {
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .blockstate(BlockStateGen.directionalBlockProvider(true))
                     .addLayer(() -> RenderType::translucent)
-                    .transform(axeOrPickaxe())
                     .transform(BlockStressDefaults.setCapacity(64d))
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
                     .item()
@@ -73,7 +73,6 @@ public class RCBlocks {
                     .initialProperties(SharedProperties::stone)
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .addLayer(() -> RenderType::translucent)
-                    .transform(axeOrPickaxe())
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
                     .item()
                     .transform(customItemModel())
@@ -81,5 +80,6 @@ public class RCBlocks {
 
     public static void register() {
         Create.registrate().addToSection(AIRCRAFT_STATION, AllSections.KINETICS);
+        Create.registrate().addToSection(FUEL_ENGINE, AllSections.KINETICS);
     }
 }
