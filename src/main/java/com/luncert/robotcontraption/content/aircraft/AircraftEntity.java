@@ -115,6 +115,28 @@ public class AircraftEntity extends Entity {
         discard();
     }
 
+    public void up(int n, ActionCallback callback) throws AircraftMovementException {
+        if (isMoving) {
+            throw new AircraftMovementException("cannot_update_moving_aircraft");
+        }
+
+        setTargetMovement(new AircraftMovement(Direction.Axis.Y, true,
+                blockPosition().getY() + .5f + n));
+        isMoving = true;
+        asyncCallbacks.add(callback);
+    }
+
+    public void down(int n, ActionCallback callback) throws AircraftMovementException {
+        if (isMoving) {
+            throw new AircraftMovementException("cannot_update_moving_aircraft");
+        }
+
+        setTargetMovement(new AircraftMovement(Direction.Axis.Y, false,
+                blockPosition().getY() + .5f - n));
+        isMoving = true;
+        asyncCallbacks.add(callback);
+    }
+
     public void forward(int n, ActionCallback callback) throws AircraftMovementException {
         if (isMoving) {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
@@ -283,7 +305,10 @@ public class AircraftEntity extends Entity {
         return speed / 512f * 1.5f;
     }
 
-    public void setSpeed(int speed) {
+    public void setSpeed(int speed) throws AircraftMovementException {
+        if (isMoving) {
+            throw new AircraftMovementException("cannot_update_moving_aircraft");
+        }
         entityData.set(SPEED, Mth.clamp(Math.abs(speed), 0, 255));
     }
 

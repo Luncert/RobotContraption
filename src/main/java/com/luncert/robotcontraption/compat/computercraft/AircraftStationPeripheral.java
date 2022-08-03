@@ -109,6 +109,42 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
+    public final MethodResult up(int n) throws LuaException {
+        checkTileEntity();
+
+        if (n <= 0) {
+            throw new LuaException("n must be positive");
+        }
+
+        int executionId = this.executionId++;
+        try {
+            tileEntity.up(n, data -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
+        } catch (AircraftMovementException | AircraftAssemblyException e) {
+            throw new LuaException(e.getMessage());
+        }
+
+        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
+    }
+
+    @LuaFunction
+    public final MethodResult down(int n) throws LuaException {
+        checkTileEntity();
+
+        if (n <= 0) {
+            throw new LuaException("n must be positive");
+        }
+
+        int executionId = this.executionId++;
+        try {
+            tileEntity.down(n, data -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
+        } catch (AircraftMovementException | AircraftAssemblyException e) {
+            throw new LuaException(e.getMessage());
+        }
+
+        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
+    }
+
+    @LuaFunction
     public final MethodResult forward(int n) throws LuaException {
         checkTileEntity();
 
@@ -159,14 +195,9 @@ public class AircraftStationPeripheral implements IPeripheral {
 
         try {
             tileEntity.setAircraftSpeed(speed);
-        } catch (AircraftAssemblyException e) {
+        } catch (AircraftAssemblyException | AircraftMovementException e) {
             throw new LuaException(e.getMessage());
         }
-    }
-
-    @LuaFunction(mainThread = true)
-    public final void stop() throws LuaException {
-        setSpeed(0);
     }
 
     @LuaFunction(mainThread = true)
@@ -181,11 +212,11 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public final Map<String, Double> getPosition() throws LuaException {
+    public final Map<String, Double> getAircraftPosition() throws LuaException {
         checkTileEntity();
 
         try {
-            Vec3 pos = tileEntity.getPosition();
+            Vec3 pos = tileEntity.getAircraftPosition();
             return ImmutableMap.of(
                 "x", pos.x,
                 "y", pos.y,
@@ -194,6 +225,18 @@ public class AircraftStationPeripheral implements IPeripheral {
         } catch (AircraftAssemblyException e) {
             throw new LuaException(e.getMessage());
         }
+    }
+
+    @LuaFunction
+    public final Map<String, Double> getStationPosition() throws LuaException {
+        checkTileEntity();
+
+        Vec3 pos = tileEntity.getStationPosition();
+        return ImmutableMap.of(
+                "x", pos.x,
+                "y", pos.y,
+                "z", pos.z
+        );
     }
 
     private void checkTileEntity() throws LuaException {

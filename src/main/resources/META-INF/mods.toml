@@ -38,7 +38,7 @@ Add computer controlled contraption for Create mod.
 [[dependencies.robotcontraption]]
     modId="createaddition"
     mandatory=true
-    versionRange="[1.18.2-20220715a,)"
+    versionRange="[1.18.2-20220712a,)"
     ordering="NONE"
     side="BOTH"
 

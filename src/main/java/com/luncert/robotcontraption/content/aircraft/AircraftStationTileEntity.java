@@ -55,6 +55,22 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         entity = null;
     }
 
+    public void up(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+        checkContraptionStatus();
+        if (getAircraftSpeed() == 0) {
+            throw new AircraftMovementException("speed_is_zero");
+        }
+        entity.up(n, callback);
+    }
+
+    public void down(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
+        checkContraptionStatus();
+        if (getAircraftSpeed() == 0) {
+            throw new AircraftMovementException("speed_is_zero");
+        }
+        entity.down(n, callback);
+    }
+
     public void forward(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
         checkContraptionStatus();
         if (getAircraftSpeed() == 0) {
@@ -79,7 +95,7 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         entity.turnRight(callback);
     }
 
-    public void setAircraftSpeed(int speed) throws AircraftAssemblyException {
+    public void setAircraftSpeed(int speed) throws AircraftAssemblyException, AircraftMovementException {
         checkContraptionStatus();
         entity.setSpeed(speed);
     }
@@ -89,9 +105,13 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         return entity.getSpeed();//generatedSpeed.getValue();
     }
 
-    public Vec3 getPosition() throws AircraftAssemblyException {
+    public Vec3 getAircraftPosition() throws AircraftAssemblyException {
         checkContraptionStatus();
         return entity.getAircraftPosition();
+    }
+
+    public Vec3 getStationPosition() {
+        return new Vec3(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
     }
 
     private void checkContraptionStatus() throws AircraftAssemblyException {
