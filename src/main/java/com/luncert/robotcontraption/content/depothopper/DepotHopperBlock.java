@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 public class DepotHopperBlock extends Block implements ITE<DepotHopperTileEntity> {
@@ -39,7 +38,7 @@ public class DepotHopperBlock extends Block implements ITE<DepotHopperTileEntity
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-        VoxelShape shape = RCShapes.DEPOT_HOPPER.get(state.getValue(FACING));
+        VoxelShape shape = RCShapes.DEPOT_HOPPER.get(state.getValue(HORIZONTAL_FACING));
         return shape == null ? RCShapes.DEFAULT : shape;
     }
 
