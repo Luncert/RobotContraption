@@ -13,6 +13,7 @@ import com.mojang.math.Vector3d;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
@@ -98,7 +99,7 @@ public class AircraftEntity extends Entity {
 
         contraption.removeBlocksFromWorld(level, BlockPos.ZERO);
         contraption.startMoving(level);
-        contraption.expandBoundsAroundAxis(Direction.Axis.Y);
+        contraption.expandBoundsAroundAxis(Axis.Y);
 
         Direction initialOrientation = stationBlockState.getValue(HORIZONTAL_FACING);
         AircraftContraptionEntity entity = AircraftContraptionEntity.create(level, contraption, initialOrientation);
@@ -120,8 +121,8 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        setTargetMovement(new AircraftMovement(Direction.Axis.Y, true,
-                blockPosition().getY() + .5f + n));
+        setTargetMovement(new AircraftMovement(Axis.Y, true,
+                (float) position().get(Axis.Y) + n));
         isMoving = true;
         asyncCallbacks.add(callback);
     }
@@ -131,8 +132,8 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        setTargetMovement(new AircraftMovement(Direction.Axis.Y, false,
-                blockPosition().getY() + .5f - n));
+        setTargetMovement(new AircraftMovement(Axis.Y, false,
+                (float) position().get(Axis.Y) - n));
         isMoving = true;
         asyncCallbacks.add(callback);
     }
@@ -143,11 +144,11 @@ public class AircraftEntity extends Entity {
         }
 
         Direction direction = Direction.fromYRot(getTargetYRot());
-        Direction.Axis axis = direction.getAxis();
+        Axis axis = direction.getAxis();
         Direction.AxisDirection axisDirection = direction.getAxisDirection();
         int posDelta = axisDirection.getStep() * n;
         setTargetMovement(new AircraftMovement(axis, axisDirection.equals(Direction.AxisDirection.POSITIVE),
-                blockPosition().get(axis) + .5f + posDelta));
+                (float) position().get(axis) + posDelta));
         isMoving = true;
         asyncCallbacks.add(callback);
     }
@@ -176,7 +177,9 @@ public class AircraftEntity extends Entity {
     }
 
     public Vec3 getAircraftPosition() {
-        return position();
+        BlockPos blockPos = blockPosition();
+        // aircraft entity is invisible, so aircraft's position should be above the entity position
+        return new Vec3(blockPos.getX(), blockPos.getY() + 1, blockPos.getZ());
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -252,8 +255,8 @@ public class AircraftEntity extends Entity {
         if (opt.isPresent()) {
             AircraftMovement movement = opt.get();
             double v = position().get(movement.axis);
-            if (v != movement.expectedPos) {
-                double absDist = Math.abs(movement.expectedPos - v);
+            double absDist = Math.abs(movement.expectedPos - v);
+            if (absDist > 0) {
                 return Optional.ofNullable(updateMotion(absDist, movement));
             }
             setYRot(getTargetYRot());
@@ -270,31 +273,24 @@ public class AircraftEntity extends Entity {
 
     private Vec3 updateMotion(double absDistance, AircraftMovement movement) {
         if (absDistance < MIN_MOVE_LENGTH) {
-            Vector3d pos = Common.set(position(), movement.axis, movement.expectedPos);
-            setPos(pos.x, pos.y, pos.z);
+            setPos(Common.set(position(), movement.axis, movement.expectedPos));
             return null;
         }
 
-        double linearMotion;
-        if (getYRot() != getTargetYRot()) {
-            linearMotion = Math.min(getMovementSpeed(32), absDistance);
+        float speed;
+        if (getYRot() != getTargetYRot() || movement.axis.equals(Axis.Y)) {
+            // if entity is rotating, set speed to 32
+            speed = getMovementSpeed(32);
         } else {
-            linearMotion = Math.min(getMovementSpeed(), absDistance);
+            speed = getMovementSpeed();
         }
 
+        double linearMotion = Math.min(speed, absDistance);
         if (!movement.positive) {
             linearMotion = -linearMotion;
         }
 
-        // movement over y axis is not supported for now
-        double x = 0, z = 0;
-        if (Direction.Axis.Z.equals(movement.axis)) {
-            z = linearMotion;
-        } else {
-            x = linearMotion;
-        }
-
-        return new Vec3(x, 0, z);
+        return Common.linear(movement.axis, linearMotion);
     }
 
     private float getMovementSpeed() {
@@ -353,7 +349,7 @@ public class AircraftEntity extends Entity {
         if (root.getBoolean("hasTargetMovement")) {
             CompoundTag targetMovement = root.getCompound("targetMovement");
             setTargetMovement(new AircraftMovement(
-                    Direction.Axis.values()[targetMovement.getInt("axis")],
+                    Axis.values()[targetMovement.getInt("axis")],
                     targetMovement.getBoolean("positive"),
                     targetMovement.getFloat("expectedPos")));
         }
