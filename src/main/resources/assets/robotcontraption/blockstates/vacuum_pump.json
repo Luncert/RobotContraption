@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "robotcontraption:block/vacuum_pump"
+    }
+  }
+}

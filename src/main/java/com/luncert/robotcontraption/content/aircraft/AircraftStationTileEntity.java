@@ -7,11 +7,8 @@ import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -21,7 +18,6 @@ import net.minecraftforge.common.util.LazyOptional;
 public class AircraftStationTileEntity extends KineticTileEntity {
 
     private final LazyOptional<AircraftStationPeripheral> peripheral;
-    private int entityId;
     private AircraftEntity entity;
 
     public AircraftStationTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -120,32 +116,7 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         peripheral.invalidate();
     }
 
-    @Override
-    protected void read(CompoundTag compound, boolean clientPacket) {
-        super.read(compound, clientPacket);
-        if (this.entity == null) {
-            this.entityId = compound.getInt("aircraftEntityId");
-        }
-    }
-
-    @Override
-    protected void write(CompoundTag compound, boolean clientPacket) {
-        super.write(compound, clientPacket);
-        if (this.entity != null) {
-            compound.putInt("aircraftEntityId", this.entity.getId());
-        }
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-
-        if (!level.isClientSide && entity == null) {
-            System.out.println(entityId);
-            System.out.println(level.getEntity(entityId));
-            if (level.getEntity(entityId) instanceof AircraftEntity aircraftEntity) {
-                this.entity = aircraftEntity;
-            }
-        }
+    public void rebindAircraftEntity(AircraftEntity entity) {
+        this.entity = entity;
     }
 }

@@ -23,6 +23,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -45,7 +46,8 @@ public class AircraftEntity extends Entity {
     private static final EntityDataAccessor<Optional<AircraftMovement>> TARGET_MOVEMENT =
             SynchedEntityData.defineId(AircraftEntity.class, MOVEMENT_SERIALIZER);
 
-    private BlockState blockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
+    private BlockPos stationPosition = BlockPos.ZERO;
+    private BlockState stationBlockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
 
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
     public boolean isMoving;
@@ -63,14 +65,15 @@ public class AircraftEntity extends Entity {
     }
 
     // for server
-    public AircraftEntity(Level world, BlockPos stationPos, BlockState blockState) {
+    public AircraftEntity(Level world, BlockPos stationPos, BlockState stationBlockState) {
         super(RCEntityTypes.AIRCRAFT.get(), world);
-        this.blockState = blockState;
+        this.stationPosition = stationPos;
+        this.stationBlockState = stationBlockState;
         // following data will be synced automatically
         setPos(stationPos.getX() + .5f, stationPos.getY(), stationPos.getZ() + .5f);
 
         this.noPhysics = true;
-        Direction blockDirection = blockState.getValue(HORIZONTAL_FACING);
+        Direction blockDirection = stationBlockState.getValue(HORIZONTAL_FACING);
         setYRot(blockDirection.toYRot());
         setTargetYRot(getYRot());
 
@@ -97,7 +100,7 @@ public class AircraftEntity extends Entity {
         contraption.startMoving(level);
         contraption.expandBoundsAroundAxis(Direction.Axis.Y);
 
-        Direction initialOrientation = blockState.getValue(HORIZONTAL_FACING);
+        Direction initialOrientation = stationBlockState.getValue(HORIZONTAL_FACING);
         AircraftContraptionEntity entity = AircraftContraptionEntity.create(level, contraption, initialOrientation);
 
         entity.setPos(pos.getX() + .5f, pos.getY(), pos.getZ() + .5f);
@@ -121,7 +124,7 @@ public class AircraftEntity extends Entity {
         Direction.Axis axis = direction.getAxis();
         Direction.AxisDirection axisDirection = direction.getAxisDirection();
         int posDelta = axisDirection.getStep() * n;
-        setWaitingMovement(new AircraftMovement(axis, axisDirection.equals(Direction.AxisDirection.POSITIVE),
+        setTargetMovement(new AircraftMovement(axis, axisDirection.equals(Direction.AxisDirection.POSITIVE),
                 blockPosition().get(axis) + .5f + posDelta));
         isMoving = true;
         asyncCallbacks.add(callback);
@@ -167,7 +170,7 @@ public class AircraftEntity extends Entity {
 
     @Override
     public void tick() {
-        if (this.blockState.isAir()) {
+        if (this.stationBlockState.isAir()) {
             discard();
             return;
         }
@@ -227,7 +230,7 @@ public class AircraftEntity extends Entity {
                 return Optional.ofNullable(updateMotion(absDist, movement));
             }
             setYRot(getTargetYRot());
-            setWaitingMovement(null);
+            setTargetMovement(null);
         }
 
         setDeltaMovement(Vec3.ZERO);
@@ -291,7 +294,7 @@ public class AircraftEntity extends Entity {
         return entityData.get(TARGET_Y_ROT);
     }
 
-    public void setWaitingMovement(@Nullable AircraftMovement movement) {
+    public void setTargetMovement(@Nullable AircraftMovement movement) {
         entityData.set(TARGET_MOVEMENT, Optional.ofNullable(movement));
     }
 
@@ -310,32 +313,52 @@ public class AircraftEntity extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag compound) {
-        if (compound.isEmpty())
+    protected void readAdditionalSaveData(CompoundTag root) {
+        if (root.isEmpty())
             return;
 
-        entityData.set(SPEED, compound.getInt("speed"));
-        entityData.set(TARGET_Y_ROT, compound.getFloat("targetYRot"));
-        if (compound.getBoolean("hasWaitingMovement")) {
-            compound = compound.getCompound("waitingMovement");
-            setWaitingMovement(new AircraftMovement(Direction.Axis.values()[compound.getInt("axis")],
-                    compound.getBoolean("positive"), compound.getFloat("expectedPos")));
+        entityData.set(SPEED, root.getInt("speed"));
+        entityData.set(TARGET_Y_ROT, root.getFloat("targetYRot"));
+
+        if (root.getBoolean("hasTargetMovement")) {
+            CompoundTag targetMovement = root.getCompound("targetMovement");
+            setTargetMovement(new AircraftMovement(
+                    Direction.Axis.values()[targetMovement.getInt("axis")],
+                    targetMovement.getBoolean("positive"),
+                    targetMovement.getFloat("expectedPos")));
+        }
+
+        CompoundTag stationPos = root.getCompound("stationPosition");
+        stationPosition = new BlockPos(
+                stationPos.getInt("x"),
+                stationPos.getInt("y"),
+                stationPos.getInt("z"));
+        BlockEntity blockEntity = level.getBlockEntity(stationPosition);
+        if (blockEntity instanceof AircraftStationTileEntity te) {
+            te.rebindAircraftEntity(this);
         }
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag compound) {
-        compound.putInt("speed", getSpeed());
-        compound.putFloat("targetYRot", getTargetYRot());
+    protected void addAdditionalSaveData(CompoundTag root) {
+        root.putInt("speed", getSpeed());
+        root.putFloat("targetYRot", getTargetYRot());
+
         Optional<AircraftMovement> opt = getTargetMovement();
-        compound.putBoolean("hasWaitingMovement", opt.isPresent());
+        root.putBoolean("hasTargetMovement", opt.isPresent());
         opt.ifPresent(movement -> {
-            CompoundTag n = new CompoundTag();
-            n.putInt("axis", movement.axis.ordinal());
-            n.putBoolean("positive", movement.positive);
-            n.putFloat("expectedPos", movement.expectedPos);
-            compound.put("waitingMovement", n);
+            CompoundTag targetMovement = new CompoundTag();
+            targetMovement.putInt("axis", movement.axis.ordinal());
+            targetMovement.putBoolean("positive", movement.positive);
+            targetMovement.putFloat("expectedPos", movement.expectedPos);
+            root.put("targetMovement", targetMovement);
         });
+
+        CompoundTag stationPos = new CompoundTag();
+        stationPos.putInt("x", stationPosition.getX());
+        stationPos.putInt("y", stationPosition.getY());
+        stationPos.putInt("z", stationPosition.getZ());
+        root.put("stationPosition", stationPos);
     }
 
     @Override
