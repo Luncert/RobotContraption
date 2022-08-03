@@ -4,6 +4,7 @@ import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperItem;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineBlock;
+import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpBlock;
 import com.luncert.robotcontraption.groups.ModGroup;
 import com.luncert.robotcontraption.content.aircraft.AircraftAnchorBlock;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
@@ -62,6 +63,17 @@ public class RCBlocks {
                     .addLayer(() -> RenderType::translucent)
                     .transform(axeOrPickaxe())
                     .transform(BlockStressDefaults.setCapacity(64d))
+                    .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .item()
+                    .transform(customItemModel())
+                    .register();
+
+    public static final BlockEntry<VacuumPumpBlock> VACUUM_PUMP =
+            REGISTRATE.block("vacuum_pump", VacuumPumpBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(BlockBehaviour.Properties::noOcclusion)
+                    .addLayer(() -> RenderType::translucent)
+                    .transform(axeOrPickaxe())
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
                     .item()
                     .transform(customItemModel())

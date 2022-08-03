@@ -175,6 +175,11 @@ public class AircraftEntity extends Entity {
             return;
         }
 
+        if (!level.isClientSide && !(level.getBlockEntity(stationPosition) instanceof AircraftStationTileEntity)) {
+            dissemble();
+            return;
+        }
+
         super.tick();
         tickLerp();
 
