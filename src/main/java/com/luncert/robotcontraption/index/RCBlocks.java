@@ -35,6 +35,7 @@ public class RCBlocks {
                     .initialProperties(SharedProperties::stone)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag) //Dono what this tag means (contraption safe?).
                     .transform(BlockStressDefaults.setImpact(4d))
+                    .transform(pickaxeOnly())
                     .item()
                     .transform(customItemModel())
                     .register();
@@ -44,6 +45,7 @@ public class RCBlocks {
                     .initialProperties(SharedProperties::stone)
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .transform(pickaxeOnly())
                     .item(DepotHopperItem::new)
                     .transform(customItemModel())
                     .register();
@@ -63,6 +65,7 @@ public class RCBlocks {
                     .blockstate(BlockStateGen.directionalBlockProvider(true))
                     .addLayer(() -> RenderType::translucent)
                     .transform(BlockStressDefaults.setCapacity(64d))
+                    .transform(pickaxeOnly())
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
                     .item()
                     .transform(customItemModel())
@@ -74,6 +77,7 @@ public class RCBlocks {
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .addLayer(() -> RenderType::translucent)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .transform(pickaxeOnly())
                     .item()
                     .transform(customItemModel())
                     .register();
