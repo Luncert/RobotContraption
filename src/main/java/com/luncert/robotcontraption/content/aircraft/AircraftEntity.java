@@ -9,7 +9,6 @@ import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.luncert.robotcontraption.index.RCBlocks;
 import com.luncert.robotcontraption.index.RCEntityTypes;
-import com.mojang.math.Vector3d;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,12 +19,14 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -38,7 +39,7 @@ import static com.simibubi.create.content.contraptions.base.HorizontalKineticBlo
 
 public class AircraftEntity extends Entity {
 
-    private static final double MIN_MOVE_LENGTH = 1.0E-7D;
+    private static final double MIN_MOVE_LENGTH = 0.001;
 
     private static final EntityDataAccessor<Integer> SPEED =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
@@ -223,7 +224,7 @@ public class AircraftEntity extends Entity {
             });
         }
 
-        // tickCollide();
+        tickCollide();
     }
 
     private void tickLerp() {
@@ -250,6 +251,27 @@ public class AircraftEntity extends Entity {
         }
     }
 
+    private void tickCollide() {
+        getTargetMovement().ifPresent(movement -> {
+            Direction direction = Direction.fromYRot(getTargetYRot());
+            Axis axis = direction.getAxis();
+            Direction.AxisDirection axisDirection = direction.getAxisDirection();
+
+            BlockPos pos = blockPosition();
+            BlockPos targetPos = pos.relative(axis, axisDirection.getStep());
+            double dist = targetPos.get(axis) - pos.get(axis);
+            if (!isFree(level.getBlockState(targetPos)) && dist < MIN_MOVE_LENGTH) {
+                setPos(Vec3.atCenterOf(pos));
+                clearMotion();
+            }
+        });
+    }
+
+    private boolean isFree(BlockState blockState) {
+        Material material = blockState.getMaterial();
+        return blockState.isAir() || blockState.is(BlockTags.FIRE) || material.isLiquid() || material.isReplaceable();
+    }
+
     private Optional<Vec3> updateMotion() {
         Optional<AircraftMovement> opt = getTargetMovement();
         if (opt.isPresent()) {
@@ -263,11 +285,7 @@ public class AircraftEntity extends Entity {
             setTargetMovement(null);
         }
 
-        setDeltaMovement(Vec3.ZERO);
-        if (isMoving && isControlledByLocalInstance()) {
-            asyncCallbacks.remove().accept(true);
-        }
-        isMoving = false;
+        clearMotion();
         return Optional.empty();
     }
 
@@ -291,6 +309,15 @@ public class AircraftEntity extends Entity {
         }
 
         return Common.linear(movement.axis, linearMotion);
+    }
+
+    private void clearMotion() {
+        setTargetMovement(null);
+        setDeltaMovement(Vec3.ZERO);
+        if (isMoving && isControlledByLocalInstance()) {
+            asyncCallbacks.remove().accept(true);
+        }
+        isMoving = false;
     }
 
     private float getMovementSpeed() {
