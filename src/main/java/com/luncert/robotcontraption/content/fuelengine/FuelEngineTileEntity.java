@@ -4,27 +4,21 @@ import com.luncert.robotcontraption.common.Capabilities;
 import com.luncert.robotcontraption.index.RCBlocks;
 import com.luncert.robotcontraption.util.Common;
 import com.luncert.robotcontraption.util.Lang;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mrh0.createaddition.index.CAFluids;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
 import com.simibubi.create.content.contraptions.particle.AirFlowParticleData;
-import com.simibubi.create.content.contraptions.particle.RotationIndicatorParticleData;
 import com.simibubi.create.foundation.tileEntity.TileEntityBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.scrollvalue.ScrollValueBehaviour;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleType;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 import org.jetbrains.annotations.NotNull;
@@ -51,18 +45,13 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
         super(typeIn, pos, state);
 
         component = LazyOptional.of(FuelEngineComponent::new);
-        fluidTank = LazyOptional.of(() ->
-                new FluidTank(1000, fluidStack -> {
-                    Fluid fluid = fluidStack.getFluid();
-                    return Common.compareFluidKinds(fluid, CAFluids.SEED_OIL.get())
-                            || Common.compareFluidKinds(fluid, CAFluids.BIOETHANOL.get());
-                    // ResourceLocation fluidId = fluidStack.getFluid().getRegistryName();
-                    // if (fluidId == null) {
-                    //     return false;
-                    // }
-                    // return fluidId.equals(CAFluids.SEED_OIL.get().getRegistryName())
-                    //         || fluidId.equals(CAFluids.BIOETHANOL.get().getRegistryName());
-                }));
+        fluidTank = LazyOptional.of(() -> new FluidTank(1000, this::fluidFilter));
+    }
+
+    private boolean fluidFilter(FluidStack fluidStack) {
+        Fluid fluid = fluidStack.getFluid();
+        return Common.compareFluidKinds(fluid, CAFluids.SEED_OIL.get())
+                || Common.compareFluidKinds(fluid, CAFluids.BIOETHANOL.get());
     }
 
     @Override
@@ -184,15 +173,25 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
     }
 
     @Override
-    public void read(CompoundTag compound, boolean clientPacket) {
-        super.read(compound, clientPacket);
-        active = compound.getBoolean("active");
+    public void read(CompoundTag root, boolean clientPacket) {
+        super.read(root, clientPacket);
+        active = root.getBoolean("active");
+
+        if (root.contains("fuel")) {
+            fluidTank.ifPresent(tank -> tank.readFromNBT(root.getCompound("fuel")));
+        }
     }
 
     @Override
-    public void write(CompoundTag compound, boolean clientPacket) {
-        super.write(compound, clientPacket);
-        compound.putBoolean("active", active);
+    public void write(CompoundTag root, boolean clientPacket) {
+        super.write(root, clientPacket);
+        root.putBoolean("active", active);
+
+        fluidTank.ifPresent(tank -> {
+            CompoundTag fluid = new CompoundTag();
+            tank.writeToNBT(fluid);
+            root.put("fuel", fluid);
+        });
     }
 
     @NotNull
