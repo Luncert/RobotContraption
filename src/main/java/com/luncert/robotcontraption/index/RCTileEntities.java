@@ -12,8 +12,6 @@ import com.simibubi.create.repack.registrate.util.entry.BlockEntityEntry;
 
 public class RCTileEntities {
 
-    public static void register() {}
-
     public static final BlockEntityEntry<AircraftStationTileEntity> AIRCRAFT_STATION =
             RobotContraption.registrate()
                     .tileEntity("aircraft_station", AircraftStationTileEntity::new)
@@ -35,4 +33,6 @@ public class RCTileEntities {
                     .validBlocks(RCBlocks.FUEL_ENGINE)
                     .renderer(() -> FuelEngineRenderer::new)
                     .register();
+
+    public static void register() {}
 }
