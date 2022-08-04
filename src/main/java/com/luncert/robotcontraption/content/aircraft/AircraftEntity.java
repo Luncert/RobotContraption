@@ -24,6 +24,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
@@ -253,23 +254,27 @@ public class AircraftEntity extends Entity {
 
     private void tickCollide() {
         getTargetMovement().ifPresent(movement -> {
-            Direction direction = Direction.fromYRot(getTargetYRot());
-            Axis axis = direction.getAxis();
-            Direction.AxisDirection axisDirection = direction.getAxisDirection();
-
-            BlockPos pos = blockPosition();
-            BlockPos targetPos = pos.relative(axis, axisDirection.getStep());
-            double dist = targetPos.get(axis) - pos.get(axis);
-            if (!isFree(level.getBlockState(targetPos)) && dist < MIN_MOVE_LENGTH) {
-                setPos(Vec3.atCenterOf(pos));
-                clearMotion();
+            // Direction direction = Direction.fromYRot(getTargetYRot());
+            // Axis axis = direction.getAxis();
+            // Direction.AxisDirection axisDirection = direction.getAxisDirection();
+            //
+            // BlockPos pos = blockPosition();
+            // BlockPos targetPos = pos.relative(axis, axisDirection.getStep());
+            // double dist = targetPos.get(axis) - pos.get(axis);
+            if (Axis.Y.equals(movement.axis) && !movement.positive) {
+                BlockPos pos = blockPosition();
+                BlockPos targetPos = pos.below();
+                double dist = targetPos.getY() - pos.getY();
+                if (dist < MIN_MOVE_LENGTH && !isFree(level.getBlockState(targetPos))) {
+                    setPos(Vec3.atBottomCenterOf(pos));
+                    clearMotion();
+                }
             }
         });
     }
 
     private boolean isFree(BlockState blockState) {
-        Material material = blockState.getMaterial();
-        return blockState.isAir() || blockState.is(BlockTags.FIRE) || material.isLiquid() || material.isReplaceable();
+        return !blockState.is(Blocks.BEDROCK);
     }
 
     private Optional<Vec3> updateMotion() {
