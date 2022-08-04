@@ -20,7 +20,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class AircraftStationBlock extends HorizontalKineticBlock implements ITE<AircraftStationTileEntity> {
 
     public static final VoxelShaper ROBOT_STATION_SHAPE = RCShapes
-            .shape(0, 0, 1, 16, 15, 14)
+            .shape(0, 0, 1, 16, 14, 14)
             .add(0, 0, 14, 16, 16, 16)
             .forDirectional();
 
