@@ -46,10 +46,10 @@ public class AircraftStationTileEntity extends KineticTileEntity {
     public void dissemble() throws AircraftAssemblyException {
         checkContraptionStatus();
 
-        Vec3 blockPos = Vec3.atCenterOf(getBlockPos()).add(0, -0.5, 0);
-        if (!blockPos.equals(entity.position())) {
-            throw new AircraftAssemblyException("not_dissemble_at_station");
-        }
+        // Vec3 blockPos = Vec3.atCenterOf(getBlockPos()).add(0, -0.5, 0);
+        // if (!blockPos.equals(entity.position())) {
+        //     throw new AircraftAssemblyException("not_dissemble_at_station");
+        // }
 
         entity.dissemble();
         entity = null;
