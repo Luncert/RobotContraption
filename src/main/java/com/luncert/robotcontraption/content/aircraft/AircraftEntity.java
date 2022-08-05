@@ -58,6 +58,7 @@ public class AircraftEntity extends Entity {
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
     public boolean isMoving;
 
+    private int actionCoolDown; // see lerp
     private int lerpSteps;
     private double lerpX;
     private double lerpY;
@@ -279,23 +280,8 @@ public class AircraftEntity extends Entity {
 
         super.tick();
         tickLerp();
-
-        boolean isStalled = false;
-        List<Entity> passengers = getPassengers();
-        if (!passengers.isEmpty()) {
-            Entity entity = passengers.get(0);
-            if (entity instanceof AircraftContraptionEntity contraptionEntity) {
-                isStalled = contraptionEntity.isStalled();
-            }
-        }
-        if (!isStalled) {
-            updateMotion().ifPresent(motion -> {
-                setDeltaMovement(motion);
-                setPos(getX() + motion.x, getY() + motion.y, getZ() + motion.z);
-            });
-        }
-
         tickCollide();
+        tickMotion();
     }
 
     private void tickLerp() {
@@ -347,6 +333,21 @@ public class AircraftEntity extends Entity {
         return !blockState.is(Blocks.BEDROCK);
     }
 
+    private void tickMotion() {
+        if (actionCoolDown-- > 0) {
+            return;
+        }
+
+        boolean isStalled = getContraptionEntity().map(AircraftContraptionEntity::isStalled).orElse(false);
+
+        if (!isStalled) {
+            updateMotion().ifPresent(motion -> {
+                setDeltaMovement(motion);
+                setPos(getX() + motion.x, getY() + motion.y, getZ() + motion.z);
+            });
+        }
+    }
+
     private Optional<Vec3> updateMotion() {
         Optional<AircraftMovement> opt = getTargetMovement();
         if (opt.isPresent()) {
@@ -389,9 +390,10 @@ public class AircraftEntity extends Entity {
     private void clearMotion() {
         setTargetMovement(null);
         setDeltaMovement(Vec3.ZERO);
-        if (isMoving && isControlledByLocalInstance()) {
+        if (isMoving && !level.isClientSide) {
             asyncCallbacks.remove().accept(true);
         }
+        actionCoolDown = 10;
         isMoving = false;
     }
 
