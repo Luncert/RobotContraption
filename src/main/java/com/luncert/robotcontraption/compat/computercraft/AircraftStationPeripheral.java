@@ -110,7 +110,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         }
     }
 
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     public final MethodResult up(int n) throws LuaException {
         checkTileEntity();
 
@@ -128,7 +128,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     public final MethodResult down(int n) throws LuaException {
         checkTileEntity();
 
@@ -146,7 +146,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     public final MethodResult forward(int n) throws LuaException {
         checkTileEntity();
 
@@ -164,7 +164,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     public final MethodResult turnLeft() throws LuaException {
         checkTileEntity();
 
@@ -178,7 +178,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     public final MethodResult turnRight() throws LuaException {
         checkTileEntity();
 
@@ -191,7 +191,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     public final void setSpeed(int speed) throws LuaException {
         checkTileEntity();
 
