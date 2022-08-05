@@ -35,6 +35,8 @@ public class AircraftStationPeripheral implements IPeripheral {
         this.tileEntity = tileEntity;
     }
 
+    // computer access
+
     public void queueEvent(String event, Object... args) {
         withComputer(c -> c.queueEvent(event, args));
     }
@@ -43,6 +45,10 @@ public class AircraftStationPeripheral implements IPeripheral {
         for (IComputerAccess computer : connected) {
             action.accept(computer);
         }
+    }
+
+    public List<IComputerAccess> getConnectedComputers() {
+        return connected;
     }
 
     @Override
@@ -69,10 +75,6 @@ public class AircraftStationPeripheral implements IPeripheral {
     @Override
     public void detach(IComputerAccess computer) {
         connected.remove(computer);
-    }
-
-    public List<IComputerAccess> getConnectedComputers() {
-        return connected;
     }
 
     // api
@@ -237,6 +239,30 @@ public class AircraftStationPeripheral implements IPeripheral {
                 "y", pos.y,
                 "z", pos.z
         );
+    }
+
+    // contraption access
+
+    @LuaFunction
+    public final float getStorageUsage() throws LuaException {
+        checkTileEntity();
+
+        try {
+            return tileEntity.getStorageUsage();
+        } catch (AircraftAssemblyException e) {
+            throw new LuaException(e.getMessage());
+        }
+    }
+
+    @LuaFunction
+    public final float getStorageSlotUsage() throws LuaException {
+        checkTileEntity();
+
+        try {
+            return tileEntity.getStorageSlotUsage();
+        } catch (AircraftAssemblyException e) {
+            throw new LuaException(e.getMessage());
+        }
     }
 
     private void checkTileEntity() throws LuaException {

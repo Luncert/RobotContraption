@@ -4,11 +4,11 @@ import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
-import com.luncert.robotcontraption.util.Common;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.luncert.robotcontraption.index.RCBlocks;
 import com.luncert.robotcontraption.index.RCEntityTypes;
+import com.luncert.robotcontraption.util.Common;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,21 +19,24 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
 
 import static com.luncert.robotcontraption.content.aircraft.AircraftMovement.MOVEMENT_SERIALIZER;
 import static com.simibubi.create.content.contraptions.base.HorizontalKineticBlock.HORIZONTAL_FACING;
@@ -182,6 +185,73 @@ public class AircraftEntity extends Entity {
         BlockPos blockPos = blockPosition();
         // aircraft entity is invisible, so aircraft's position should be above the entity position
         return new Vec3(blockPos.getX(), blockPos.getY() + 1, blockPos.getZ());
+    }
+
+    public float getStorageUsage() {
+        Optional<AircraftContraption> opt = getContraption();
+        if (opt.isEmpty()) {
+            throw new AssertionError("not reachable");
+        }
+
+        AircraftContraption contraption = opt.get();
+        IItemHandlerModifiable sharedInventory = contraption.getSharedInventory();
+
+        int totalSpace = 0;
+        float used = 0;
+        for (int slot = 0; slot < sharedInventory.getSlots(); slot++) {
+            ItemStack stackInSlot = sharedInventory.getStackInSlot(slot);
+            int space = Math.min(stackInSlot.getMaxStackSize(), sharedInventory.getSlotLimit(slot));
+            int count = stackInSlot.getCount();
+            if (space == 0)
+                continue;
+
+            totalSpace++;
+            used += count * (1f / space);
+        }
+        return used / totalSpace;
+    }
+
+    public float getStorageSlotUsage() {
+        Optional<AircraftContraption> opt = getContraption();
+        if (opt.isEmpty()) {
+            throw new AssertionError("not reachable");
+        }
+
+        AircraftContraption contraption = opt.get();
+        IItemHandlerModifiable sharedInventory = contraption.getSharedInventory();
+
+        int totalSpace = 0;
+        float usedSpace = 0;
+        for (int slot = 0; slot < sharedInventory.getSlots(); slot++) {
+            ItemStack stackInSlot = sharedInventory.getStackInSlot(slot);
+            int space = Math.min(stackInSlot.getMaxStackSize(), sharedInventory.getSlotLimit(slot));
+            int count = stackInSlot.getCount();
+            if (space == 0)
+                continue;
+
+            totalSpace++;
+
+            if (count > 0) {
+                usedSpace++;
+            }
+        }
+        return usedSpace / totalSpace;
+    }
+
+    private Optional<AircraftContraption> getContraption() {
+        return getContraptionEntity().map(e -> (AircraftContraption) e.getContraption());
+    }
+
+    private Optional<AircraftContraptionEntity> getContraptionEntity() {
+        List<Entity> passengers = getPassengers();
+        if (!passengers.isEmpty()) {
+            Entity entity = passengers.get(0);
+            if (entity instanceof AircraftContraptionEntity contraptionEntity) {
+                return Optional.of(contraptionEntity);
+            }
+        }
+
+        return Optional.empty();
     }
 
     @OnlyIn(Dist.CLIENT)

@@ -114,6 +114,18 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         return new Vec3(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
     }
 
+    public float getStorageUsage() throws AircraftAssemblyException {
+        checkContraptionStatus();
+
+        return entity.getStorageUsage();
+    }
+
+    public float getStorageSlotUsage() throws AircraftAssemblyException {
+        checkContraptionStatus();
+
+        return entity.getStorageSlotUsage();
+    }
+
     private void checkContraptionStatus() throws AircraftAssemblyException {
         if (entity == null) {
             throw new AircraftAssemblyException("aircraft_dissembled");
