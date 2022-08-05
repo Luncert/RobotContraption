@@ -26,13 +26,13 @@ import static com.luncert.robotcontraption.index.RCContraptionTypes.AIRCRAFT;
 
 public class AircraftContraption extends Contraption {
 
-    public AircraftMovementMode rotationMode;
+    public EAircraftMovementMode rotationMode;
 
     public AircraftContraption() {
-        this(AircraftMovementMode.ROTATE);
+        this(EAircraftMovementMode.ROTATE);
     }
 
-    public AircraftContraption(AircraftMovementMode rotationMode) {
+    public AircraftContraption(EAircraftMovementMode rotationMode) {
         this.rotationMode = rotationMode;
     }
 
@@ -88,7 +88,7 @@ public class AircraftContraption extends Contraption {
 
     @Override
     public void readNBT(Level world, CompoundTag nbt, boolean spawnData) {
-        rotationMode = NBTHelper.readEnum(nbt, "RotationMode", AircraftMovementMode.class);
+        rotationMode = NBTHelper.readEnum(nbt, "RotationMode", EAircraftMovementMode.class);
         super.readNBT(world, nbt, spawnData);
     }
 

@@ -2,7 +2,7 @@ package com.luncert.robotcontraption.compat.create;
 
 import com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerTileEntity;
 
-public enum AircraftMovementMode {
+public enum EAircraftMovementMode {
 
     // Always face toward motion
     ROTATE(CartAssemblerTileEntity.CartMovementMode.ROTATE),
@@ -16,7 +16,7 @@ public enum AircraftMovementMode {
 
     private final CartAssemblerTileEntity.CartMovementMode mode;
 
-    AircraftMovementMode(CartAssemblerTileEntity.CartMovementMode mode) {
+    EAircraftMovementMode(CartAssemblerTileEntity.CartMovementMode mode) {
         this.mode = mode;
     }
 

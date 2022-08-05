@@ -1,7 +1,7 @@
 package com.luncert.robotcontraption.compat.computercraft;
 
 import com.google.common.collect.ImmutableMap;
-import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
+import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
@@ -11,13 +11,11 @@ import dan200.computercraft.api.lua.MethodResult;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import net.minecraft.world.phys.Vec3;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static com.luncert.robotcontraption.compat.computercraft.AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE;
@@ -83,11 +81,11 @@ public class AircraftStationPeripheral implements IPeripheral {
     public final void assemble(String rotationMode) throws LuaException {
         checkTileEntity();
 
-        AircraftMovementMode mode;
+        EAircraftMovementMode mode;
         try {
-            mode = AircraftMovementMode.valueOf(rotationMode.toUpperCase());
+            mode = EAircraftMovementMode.valueOf(rotationMode.toUpperCase());
         }catch (IllegalArgumentException e) {
-            throw new LuaException("Invalid mode, must be one of " + Arrays.toString(AircraftMovementMode.values()));
+            throw new LuaException("Invalid argument, must be one of " + Arrays.toString(EAircraftMovementMode.values()));
         }
 
         try {
@@ -263,6 +261,36 @@ public class AircraftStationPeripheral implements IPeripheral {
         } catch (AircraftAssemblyException e) {
             throw new LuaException(e.getMessage());
         }
+    }
+
+    @LuaFunction(mainThread = true)
+    public final MethodResult search(String harvestable) throws LuaException {
+        checkTileEntity();
+
+        EHarvestable h;
+        try {
+            h = EHarvestable.valueOf(harvestable.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new LuaException("Invalid argument, must be one of " + Arrays.toString(EHarvestable.values()));
+        }
+
+        Optional<Pair<Vec3, Vec3>> opt = tileEntity.search(h);
+        if (opt.isEmpty()) {
+            return MethodResult.of(false);
+        }
+
+        Pair<Vec3, Vec3> locator = opt.get();
+        Vec3 a = locator.getLeft();
+        Vec3 b = locator.getRight();
+        return MethodResult.of(
+                ImmutableMap.of(
+                        "x1", a.x,
+                        "y1", a.y,
+                        "z1", a.z,
+                        "x2", b.x,
+                        "y2", b.y,
+                        "z2", b.z
+                ));
     }
 
     private void checkTileEntity() throws LuaException {

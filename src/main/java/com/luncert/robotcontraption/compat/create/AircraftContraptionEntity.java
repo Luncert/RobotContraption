@@ -35,8 +35,8 @@ public class AircraftContraptionEntity extends OrientedContraptionEntity {
         boolean pauseWhileRotating = false;
         boolean wasStalled = isStalled();
         if (contraption instanceof AircraftContraption contraption) {
-            rotationLock = contraption.rotationMode == AircraftMovementMode.ROTATION_LOCKED;
-            pauseWhileRotating = contraption.rotationMode == AircraftMovementMode.ROTATE_PAUSED;
+            rotationLock = contraption.rotationMode == EAircraftMovementMode.ROTATION_LOCKED;
+            pauseWhileRotating = contraption.rotationMode == EAircraftMovementMode.ROTATE_PAUSED;
         }
 
         boolean rotating = updateOrientation(rotationLock, wasStalled, vehicle, false);

@@ -1,11 +1,14 @@
 package com.luncert.robotcontraption.content.aircraft;
 
 import com.luncert.robotcontraption.common.ActionCallback;
+import com.luncert.robotcontraption.common.LocalVariable;
 import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
+import com.luncert.robotcontraption.compat.computercraft.EHarvestable;
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
-import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
+import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
+import com.luncert.robotcontraption.util.ScanUtils;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -14,6 +17,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Optional;
 
 public class AircraftStationTileEntity extends KineticTileEntity {
 
@@ -29,7 +35,7 @@ public class AircraftStationTileEntity extends KineticTileEntity {
 
     // api
 
-    public void assemble(AircraftMovementMode mode) throws AircraftAssemblyException {
+    public void assemble(EAircraftMovementMode mode) throws AircraftAssemblyException {
         if (entity != null) {
             throw new AircraftAssemblyException("aircraft_assembled");
         }
@@ -124,6 +130,22 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         checkContraptionStatus();
 
         return entity.getStorageSlotUsage();
+    }
+
+    public Optional<Pair<Vec3, Vec3>> search(EHarvestable target) {
+        BlockPos center = entity.blockPosition();
+
+        LocalVariable<Pair<Vec3, Vec3>> ref = new LocalVariable<>();
+
+        ScanUtils.relativeTraverseBlocks(level, center, 64, (state, pos) -> {
+            if (target.test(state)) {
+                ref.set(ScanUtils.calcShapeForAdjacentBlocks(level, pos));
+                return false;
+            }
+            return true;
+        });
+
+        return Optional.ofNullable(ref.get());
     }
 
     private void checkContraptionStatus() throws AircraftAssemblyException {

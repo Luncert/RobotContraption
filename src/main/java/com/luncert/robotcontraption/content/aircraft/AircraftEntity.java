@@ -3,7 +3,7 @@ package com.luncert.robotcontraption.content.aircraft;
 import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
-import com.luncert.robotcontraption.compat.create.AircraftMovementMode;
+import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import com.luncert.robotcontraption.index.RCBlocks;
@@ -93,7 +93,7 @@ public class AircraftEntity extends Entity {
         return entityBuilder.sized(0.1f, 0.1f);
     }
 
-    public boolean assemble(BlockPos pos, AircraftMovementMode mode) throws AircraftAssemblyException {
+    public boolean assemble(BlockPos pos, EAircraftMovementMode mode) throws AircraftAssemblyException {
         AircraftContraption contraption = new AircraftContraption(mode);
         try {
             if (!contraption.assemble(level, pos)) {
