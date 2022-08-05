@@ -274,7 +274,12 @@ public class AircraftStationPeripheral implements IPeripheral {
             throw new LuaException("Invalid argument, must be one of " + Arrays.toString(EHarvestable.values()));
         }
 
-        Optional<Pair<Vec3, Vec3>> opt = tileEntity.search(h);
+        Optional<Pair<Vec3, Vec3>> opt;
+        try {
+            opt = tileEntity.search(h);
+        } catch (AircraftAssemblyException e) {
+            throw new LuaException(e.getMessage());
+        }
         if (opt.isEmpty()) {
             return MethodResult.of(false);
         }

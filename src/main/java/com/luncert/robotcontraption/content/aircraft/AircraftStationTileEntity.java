@@ -132,12 +132,14 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         return entity.getStorageSlotUsage();
     }
 
-    public Optional<Pair<Vec3, Vec3>> search(EHarvestable target) {
+    public Optional<Pair<Vec3, Vec3>> search(EHarvestable target) throws AircraftAssemblyException {
+        checkContraptionStatus();
+
         BlockPos center = entity.blockPosition();
 
         LocalVariable<Pair<Vec3, Vec3>> ref = new LocalVariable<>();
 
-        ScanUtils.relativeTraverseBlocks(level, center, 64, (state, pos) -> {
+        ScanUtils.traverseBlocks(level, center, 8, (state, pos) -> {
             if (target.test(state)) {
                 ref.set(ScanUtils.calcShapeForAdjacentBlocks(level, pos));
                 return false;

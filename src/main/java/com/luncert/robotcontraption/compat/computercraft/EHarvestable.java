@@ -8,16 +8,16 @@ import net.minecraftforge.common.Tags;
 
 public enum EHarvestable {
 
-    ORE_COAL(Tags.Blocks.ORES_COAL),
-    ORE_IRON(Tags.Blocks.ORES_IRON),
-    ORE_GOLD(Tags.Blocks.ORES_GOLD),
-    ORE_COPPER(Tags.Blocks.ORES_COPPER),
-    ORE_ZINC(AllTags.forgeBlockTag("ores/zinc")),
-    ORE_EMERALD(Tags.Blocks.ORES_EMERALD),
-    ORE_REDSTONE(Tags.Blocks.ORES_REDSTONE),
-    ORE_LAPIS(Tags.Blocks.ORES_LAPIS),
-    ORE_DIAMOND(Tags.Blocks.ORES_DIAMOND),
-    ORE_QUARTZ(Tags.Blocks.ORES_QUARTZ),
+    COAL(Tags.Blocks.ORES_COAL),
+    IRON(Tags.Blocks.ORES_IRON),
+    GOLD(Tags.Blocks.ORES_GOLD),
+    COPPER(Tags.Blocks.ORES_COPPER),
+    ZINC(AllTags.forgeBlockTag("ores/zinc")),
+    EMERALD(Tags.Blocks.ORES_EMERALD),
+    REDSTONE(Tags.Blocks.ORES_REDSTONE),
+    LAPIS(Tags.Blocks.ORES_LAPIS),
+    DIAMOND(Tags.Blocks.ORES_DIAMOND),
+    QUARTZ(Tags.Blocks.ORES_QUARTZ),
     ANCIENT_DEBRIS(Tags.Blocks.ORES_NETHERITE_SCRAP)
     ;
 

@@ -7,35 +7,44 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.Stack;
 import java.util.function.BiFunction;
 
 public class ScanUtils {
 
     public static Pair<Vec3, Vec3> calcShapeForAdjacentBlocks(Level world, BlockPos base) {
+        // TODO compare tag not block
         Block targetBlock = world.getBlockState(base).getBlock();
 
         int ax = base.getX(), ay = base.getY(), az = base.getZ(),
             bx = ax, by = ay, bz = az;
 
+        Set<BlockPos> visited = new HashSet<>();
+
         Stack<BlockPos> stack = new Stack<>();
         stack.add(base.above());
         stack.add(base.below());
-        stack.add(base.relative(Direction.NORTH));
-        stack.add(base.relative(Direction.EAST));
-        stack.add(base.relative(Direction.SOUTH));
-        stack.add(base.relative(Direction.WEST));
+        stack.add(base.west());
+        stack.add(base.east());
+        stack.add(base.south());
+        stack.add(base.north());
+        visited.add(base);
         while (!stack.isEmpty()) {
             BlockPos pos = stack.pop();
             BlockState blockState = world.getBlockState(pos);
-            if (blockState.is(targetBlock)) {
+            if (!visited.contains(pos) && blockState.is(targetBlock)) {
                 stack.add(pos.above());
                 stack.add(pos.below());
-                stack.add(pos.relative(Direction.NORTH));
-                stack.add(pos.relative(Direction.EAST));
-                stack.add(pos.relative(Direction.SOUTH));
-                stack.add(pos.relative(Direction.WEST));
+                stack.add(pos.west());
+                stack.add(pos.east());
+                stack.add(pos.south());
+                stack.add(pos.north());
+                visited.add(pos);
 
                 ax = Math.min(pos.getX(), ax);
                 ay = Math.min(pos.getY(), ay);
