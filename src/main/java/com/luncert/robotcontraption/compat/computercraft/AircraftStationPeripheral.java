@@ -10,6 +10,7 @@ import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.lua.MethodResult;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -296,6 +297,22 @@ public class AircraftStationPeripheral implements IPeripheral {
                         "y2", b.y,
                         "z2", b.z
                 ));
+    }
+
+    @LuaFunction
+    public final Map<String, Object> getFacingDirection() throws LuaException {
+        checkTileEntity();
+
+        try {
+            Direction direction = tileEntity.getFacingDirection();
+            Direction.AxisDirection axis = direction.getAxisDirection();
+            return ImmutableMap.of(
+                    "axis", axis.getName(),
+                    "step", axis.getStep()
+            );
+        } catch (AircraftAssemblyException e) {
+            throw new LuaException(e.getMessage());
+        }
     }
 
     private void checkTileEntity() throws LuaException {

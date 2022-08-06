@@ -150,6 +150,12 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         return Optional.ofNullable(ref.get());
     }
 
+    public Direction getFacingDirection() throws AircraftAssemblyException {
+        checkContraptionStatus();
+
+        return entity.getFacingDirection();
+    }
+
     private void checkContraptionStatus() throws AircraftAssemblyException {
         if (entity == null) {
             throw new AircraftAssemblyException("aircraft_dissembled");

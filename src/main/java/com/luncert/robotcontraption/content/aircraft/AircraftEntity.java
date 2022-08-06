@@ -239,6 +239,10 @@ public class AircraftEntity extends Entity {
         return usedSpace / totalSpace;
     }
 
+    public Direction getFacingDirection() {
+        return Direction.fromYRot(getTargetYRot());
+    }
+
     private Optional<AircraftContraption> getContraption() {
         return getContraptionEntity().map(e -> (AircraftContraption) e.getContraption());
     }
