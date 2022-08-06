@@ -39,6 +39,7 @@ public class FuelEngineBlock extends HorizontalKineticBlock implements ITE<FuelE
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
+        // TODO
         builder.add(POWERED);
     }
 
