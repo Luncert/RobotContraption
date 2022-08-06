@@ -56,6 +56,7 @@ public class AircraftEntity extends Entity {
     private BlockState stationBlockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
 
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
+    private final Queue<Runnable> actionQueue = new ArrayDeque<>();
     public boolean isMoving;
 
     private int actionCoolDown; // see lerp
@@ -122,15 +123,19 @@ public class AircraftEntity extends Entity {
         discard();
     }
 
+    // action api
+
     public void up(int n, ActionCallback callback) throws AircraftMovementException {
         if (isMoving) {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        setTargetMovement(new AircraftMovement(Axis.Y, true,
-                (float) position().get(Axis.Y) + n));
-        isMoving = true;
-        asyncCallbacks.add(callback);
+        actionQueue.add(() -> {
+            setTargetMovement(new AircraftMovement(Axis.Y, true,
+                    (float) position().get(Axis.Y) + n));
+            isMoving = true;
+            asyncCallbacks.add(callback);
+        });
     }
 
     public void down(int n, ActionCallback callback) throws AircraftMovementException {
@@ -138,10 +143,12 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        setTargetMovement(new AircraftMovement(Axis.Y, false,
-                (float) position().get(Axis.Y) - n));
-        isMoving = true;
-        asyncCallbacks.add(callback);
+        actionQueue.add(() -> {
+            setTargetMovement(new AircraftMovement(Axis.Y, false,
+                    (float) position().get(Axis.Y) - n));
+            isMoving = true;
+            asyncCallbacks.add(callback);
+        });
     }
 
     public void forward(int n, ActionCallback callback) throws AircraftMovementException {
@@ -149,29 +156,26 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        Direction direction = Direction.fromYRot(getTargetYRot());
-        Axis axis = direction.getAxis();
-        Direction.AxisDirection axisDirection = direction.getAxisDirection();
-        int posDelta = axisDirection.getStep() * n;
-        setTargetMovement(new AircraftMovement(axis, axisDirection.equals(Direction.AxisDirection.POSITIVE),
-                (float) position().get(axis) + posDelta));
-        isMoving = true;
-        asyncCallbacks.add(callback);
+        actionQueue.add(() -> moveForward(n, callback));
     }
 
     public void turnLeft(ActionCallback callback) throws AircraftMovementException {
-        rotate(-90, callback);
-    }
-
-    public void turnRight(ActionCallback callback) throws AircraftMovementException {
-        rotate(90, callback);
-    }
-
-    private void rotate(int degree, ActionCallback callback) throws AircraftMovementException {
         if (isMoving) {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
+        actionQueue.add(() -> rotate(-90, callback));
+    }
+
+    public void turnRight(ActionCallback callback) throws AircraftMovementException {
+        if (isMoving) {
+            throw new AircraftMovementException("cannot_update_moving_aircraft");
+        }
+
+        actionQueue.add(() -> rotate(90, callback));
+    }
+
+    private void rotate(int degree, ActionCallback callback) {
         float targetYRot = getYRot() + degree;
         if (targetYRot < 0) {
             targetYRot += 360;
@@ -179,8 +183,22 @@ public class AircraftEntity extends Entity {
             targetYRot -= 360;
         }
         setTargetYRot(targetYRot);
-        forward(1, callback);
+        moveForward(1, callback);
     }
+
+    private void moveForward(int n, ActionCallback callback) {
+        Direction direction = Direction.fromYRot(getTargetYRot());
+        Axis axis = direction.getAxis();
+        Direction.AxisDirection axisDirection = direction.getAxisDirection();
+        int posDelta = axisDirection.getStep() * n;
+
+        setTargetMovement(new AircraftMovement(axis, axisDirection.equals(Direction.AxisDirection.POSITIVE),
+                (float) position().get(axis) + posDelta));
+        isMoving = true;
+        asyncCallbacks.add(callback);
+    }
+
+    // info api
 
     public Vec3 getAircraftPosition() {
         BlockPos blockPos = blockPosition();
@@ -340,6 +358,11 @@ public class AircraftEntity extends Entity {
     private void tickMotion() {
         if (actionCoolDown-- > 0) {
             return;
+        }
+
+        if (!actionQueue.isEmpty()) {
+            Runnable action = actionQueue.remove();
+            action.run();
         }
 
         boolean isStalled = getContraptionEntity().map(AircraftContraptionEntity::isStalled).orElse(false);
