@@ -240,6 +240,48 @@ public class AircraftStationPeripheral implements IPeripheral {
         );
     }
 
+    @LuaFunction
+    public final Map<String, Object> getAircraftFacing() throws LuaException {
+        checkTileEntity();
+
+        try {
+            Direction direction = tileEntity.getAircraftFacing();
+            Direction.AxisDirection axisDirection = direction.getAxisDirection();
+            return ImmutableMap.of(
+                    "axis", direction.getAxis().getName(),
+                    "step", axisDirection.getStep()
+            );
+        } catch (AircraftAssemblyException e) {
+            throw new LuaException(e.getMessage());
+        }
+    }
+
+    @LuaFunction
+    public final Map<String, Object> getStationFacing() throws LuaException {
+        checkTileEntity();
+
+        Direction direction = tileEntity.getStationFacing();
+        Direction.AxisDirection axisDirection = direction.getAxisDirection();
+        return ImmutableMap.of(
+                "axis", direction.getAxis().getName(),
+                "step", axisDirection.getStep()
+        );
+    }
+
+    @LuaFunction
+    public final int calcRotationTo(String axis, int step) throws LuaException {
+        checkTileEntity();
+
+        try {
+            Direction.Axis a = Direction.Axis.valueOf(axis);
+            return tileEntity.calcRotationTo(a, step);
+        } catch (IllegalArgumentException e) {
+            throw new LuaException("Invalid argument, must be one of " + Arrays.toString(Direction.Axis.values()));
+        } catch (AircraftAssemblyException e) {
+            throw new LuaException(e.getMessage());
+        }
+    }
+
     // contraption access
 
     @LuaFunction
@@ -297,22 +339,6 @@ public class AircraftStationPeripheral implements IPeripheral {
                         "y2", b.y,
                         "z2", b.z
                 ));
-    }
-
-    @LuaFunction
-    public final Map<String, Object> getFacingDirection() throws LuaException {
-        checkTileEntity();
-
-        try {
-            Direction direction = tileEntity.getFacingDirection();
-            Direction.AxisDirection axisDirection = direction.getAxisDirection();
-            return ImmutableMap.of(
-                    "axis", direction.getAxis().getName(),
-                    "step", axisDirection.getStep()
-            );
-        } catch (AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
     }
 
     private void checkTileEntity() throws LuaException {

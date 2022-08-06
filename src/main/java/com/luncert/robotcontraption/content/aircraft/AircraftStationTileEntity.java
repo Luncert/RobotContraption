@@ -21,6 +21,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 
+import static com.simibubi.create.content.contraptions.base.HorizontalKineticBlock.HORIZONTAL_FACING;
+
 public class AircraftStationTileEntity extends KineticTileEntity {
 
     private final LazyOptional<AircraftStationPeripheral> peripheral;
@@ -150,10 +152,38 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         return Optional.ofNullable(ref.get());
     }
 
-    public Direction getFacingDirection() throws AircraftAssemblyException {
+    public Direction getAircraftFacing() throws AircraftAssemblyException {
         checkContraptionStatus();
 
-        return entity.getFacingDirection();
+        return entity.getAircraftFacing();
+    }
+
+    public Direction getStationFacing() {
+        return getBlockState().getValue(HORIZONTAL_FACING);
+    }
+
+
+    public int calcRotationTo(Direction.Axis axis, int step) throws AircraftAssemblyException {
+        checkContraptionStatus();
+
+        int rotateStep = 0;
+
+        Direction facingDirection = getAircraftFacing();
+        Direction.AxisDirection axisDirection = facingDirection.getAxisDirection();
+        if (!axis.equals(facingDirection.getAxis())) {
+            rotateStep++;
+            axisDirection = Direction.fromYRot(facingDirection.toYRot() + 90).getAxisDirection();
+        }
+
+        if (axisDirection.getStep() != step) {
+            rotateStep += 2;
+        }
+
+        if (rotateStep > 2) {
+            rotateStep -= 4;
+        }
+
+        return rotateStep;
     }
 
     private void checkContraptionStatus() throws AircraftAssemblyException {

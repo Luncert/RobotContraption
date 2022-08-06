@@ -239,7 +239,7 @@ public class AircraftEntity extends Entity {
         return usedSpace / totalSpace;
     }
 
-    public Direction getFacingDirection() {
+    public Direction getAircraftFacing() {
         return Direction.fromYRot(getTargetYRot());
     }
 
