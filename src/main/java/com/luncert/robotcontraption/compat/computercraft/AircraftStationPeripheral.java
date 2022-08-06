@@ -305,10 +305,10 @@ public class AircraftStationPeripheral implements IPeripheral {
 
         try {
             Direction direction = tileEntity.getFacingDirection();
-            Direction.AxisDirection axis = direction.getAxisDirection();
+            Direction.AxisDirection axisDirection = direction.getAxisDirection();
             return ImmutableMap.of(
-                    "axis", axis.getName(),
-                    "step", axis.getStep()
+                    "axis", direction.getAxis().getName(),
+                    "step", axisDirection.getStep()
             );
         } catch (AircraftAssemblyException e) {
             throw new LuaException(e.getMessage());
