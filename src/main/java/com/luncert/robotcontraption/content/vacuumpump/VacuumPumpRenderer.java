@@ -40,10 +40,8 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
     protected void renderSafe(KineticTileEntity te, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         if (Backend.canUseInstancing(te.getLevel())) return;
 
-        if (Backend.canUseInstancing(te.getLevel())) return;
-
         Direction direction = te.getBlockState().getValue(FACING);
-        VertexConsumer vb = buffer.getBuffer(RenderType.solid());
+        VertexConsumer vb = buffer.getBuffer(RenderType.cutoutMipped());
 
         int lightBehind = LevelRenderer.getLightColor(te.getLevel(), te.getBlockPos().relative(direction.getOpposite()));
         int lightInFront = LevelRenderer.getLightColor(te.getLevel(), te.getBlockPos().relative(direction));
@@ -53,17 +51,20 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
         SuperByteBuffer slider =
                 CachedBufferer.partialFacing(RCBlockPartials.VACUUM_PUMP_SLIDER, te.getBlockState(), direction);
 
-        float time = AnimationTickHolder.getRenderTime(te.getLevel());
-        double offset = 10 - Math.sqrt((time % 16 - 4));
+        double offset = 0;
+        if (te.getSpeed() != 0) {
+            float renderTick = AnimationTickHolder.getRenderTime(te.getLevel());
+            offset = (6 - Math.pow((renderTick % 12 - 6) / 2.449489742783178, 2)) / 16;
+        }
 
         standardKineticRotationTransform(cogwheel, te, lightBehind).renderInto(ms, vb);
-        kineticTranslate(slider, direction.getAxis(), offset, lightInFront).renderInto(ms, vb);
+        kineticTranslate(slider, te, direction.getAxis(), offset, lightInFront).renderInto(ms, vb);
     }
 
-    private SuperByteBuffer kineticTranslate(SuperByteBuffer buffer, Direction.Axis axis, double offset, int light) {
+    private SuperByteBuffer kineticTranslate(SuperByteBuffer buffer, KineticTileEntity te, Direction.Axis axis, double offset, int light) {
         buffer.light(light);
         buffer.rotateCentered(Direction.get(Direction.AxisDirection.POSITIVE, axis), 0);
-        buffer.translate(Common.linear(axis, offset));
+        buffer.translate(Common.relative(Common.convert(te.getBlockPos()), axis, offset));
         return buffer;
     }
 

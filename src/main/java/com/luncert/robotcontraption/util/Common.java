@@ -15,11 +15,11 @@ public class Common {
 
     public static Vec3 relative(Vec3 v, Direction.Axis axis, double delta) {
         if (delta != 0) {
-            switch (axis) {
-                case X -> v.add(new Vec3(delta, 0, 0));
-                case Y -> v.add(new Vec3(0, delta, 0));
-                case Z -> v.add(new Vec3(0, 0, delta));
-            }
+            return switch (axis) {
+                case X -> new Vec3(v.x + delta, v.y, v.z);
+                case Y -> new Vec3(v.x, v.y + delta, v.z);
+                case Z -> new Vec3(v.x, v.y, v.z + delta);
+            };
         }
 
         return v;
