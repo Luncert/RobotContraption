@@ -64,16 +64,12 @@ public class VacuumPumpInstance extends KineticTileInstance<VacuumPumpTileEntity
         slider.delete();
     }
 
-    int t;
-
     private void animeSlider() {
         PoseStack msLocal = new PoseStack();
         TransformStack msr = TransformStack.cast(msLocal);
 
         if (blockEntity.getSpeed() != 0) {
-            float renderTick = AnimationTickHolder.getRenderTime(te.getLevel());
-            Direction direction = blockEntity.getBlockState().getValue(FACING);
-            double offset = (6 - Math.pow((renderTick % 12 - 6) / 2.449489742783178, 2)) / 16;
+            double offset = VacuumPumpRenderer.calcSliderOffset(te.getLevel(), direction);
             msr.translate(Common.relative(Common.convert(getInstancePosition()), direction.getAxis(), offset));
         } else {
             msr.translate(getInstancePosition());

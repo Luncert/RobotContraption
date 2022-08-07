@@ -2,7 +2,7 @@ package com.luncert.robotcontraption.content.vacuumpump;
 
 import com.luncert.robotcontraption.index.RCShapes;
 import com.luncert.robotcontraption.index.RCTileEntities;
-import com.simibubi.create.content.contraptions.base.DirectionalKineticBlock;
+import com.simibubi.create.content.contraptions.base.DirectionalAxisKineticBlock;
 import com.simibubi.create.foundation.block.ITE;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import net.minecraft.core.BlockPos;
@@ -17,7 +17,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nullable;
 
-public class VacuumPumpBlock extends DirectionalKineticBlock implements ITE<VacuumPumpTileEntity> {
+public class VacuumPumpBlock extends DirectionalAxisKineticBlock implements ITE<VacuumPumpTileEntity> {
 
     public static final VoxelShaper VACUUM_PUMP_SHAPE = RCShapes
             .shape(2, 0, 2, 14, 12, 14)

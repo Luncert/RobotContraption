@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -53,15 +54,20 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
 
         double offset = 0;
         if (te.getSpeed() != 0) {
-            float renderTick = AnimationTickHolder.getRenderTime(te.getLevel());
-            offset = (6 - Math.pow((renderTick % 12 - 6) / 2.449489742783178, 2)) / 16;
+            offset = calcSliderOffset(te.getLevel(), direction);
         }
 
         standardKineticRotationTransform(cogwheel, te, lightBehind).renderInto(ms, vb);
         kineticTranslate(slider, te, direction.getAxis(), offset, lightInFront).renderInto(ms, vb);
     }
 
-    private SuperByteBuffer kineticTranslate(SuperByteBuffer buffer, KineticTileEntity te, Direction.Axis axis, double offset, int light) {
+    static double calcSliderOffset(Level world, Direction direction) {
+        float renderTick = AnimationTickHolder.getRenderTime(world);
+        return (6 - Math.pow((renderTick % 24 / 2 - 6) / 2.449489742783178, 2)) / 16
+                * -direction.getAxisDirection().getStep();
+    }
+
+    private static SuperByteBuffer kineticTranslate(SuperByteBuffer buffer, KineticTileEntity te, Direction.Axis axis, double offset, int light) {
         buffer.light(light);
         buffer.rotateCentered(Direction.get(Direction.AxisDirection.POSITIVE, axis), 0);
         buffer.translate(Common.relative(Common.convert(te.getBlockPos()), axis, offset));
@@ -74,29 +80,33 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
         BlockState blockState = context.state;
         Direction direction = blockState.getValue(FACING);
 
-        SuperByteBuffer cogwheel =
-                CachedBufferer.partialFacing(RCBlockPartials.COGWHEEL_NO_SHAFT, blockState, direction);
-
         Vec3 center = VecHelper.getCenterOf(new BlockPos(context.position));
         double distance = context.position.distanceTo(center);
         double nextDistance = context.position.add(context.motion)
                 .distanceTo(center);
         double factor = .5f - Mth.clamp(Mth.lerp(AnimationTickHolder.getPartialTicks(), distance, nextDistance), 0, 1);
-        Vec3 offset = Vec3.atLowerCornerOf(blockState.getValue(DirectionalKineticBlock.FACING)
+        Vec3 baseOffset = Vec3.atLowerCornerOf(blockState.getValue(DirectionalKineticBlock.FACING)
                 .getNormal()).scale(factor);
+
+        float speed = context.getAnimationSpeed();
+        if (context.contraption.stalled)
+            speed = 0;
+
+        SuperByteBuffer cogwheel =
+                CachedBufferer.partialFacing(RCBlockPartials.COGWHEEL_NO_SHAFT, blockState, direction);
+        SuperByteBuffer slider =
+                CachedBufferer.partialFacing(RCBlockPartials.VACUUM_PUMP_SLIDER, blockState, direction);
 
         PoseStack m = matrices.getModel();
         m.pushPose();
 
         m.pushPose();
         Direction.Axis axis = Direction.Axis.Y;
-        if (context.state.getBlock() instanceof IRotate) {
-            IRotate def = (IRotate) context.state.getBlock();
+        if (context.state.getBlock() instanceof IRotate def) {
             axis = def.getRotationAxis(context.state);
         }
 
         float time = AnimationTickHolder.getRenderTime(context.world) / 20;
-        int speed = 64;
         float angle = (time * speed) % 360;
 
         TransformStack.cast(m)
@@ -108,11 +118,19 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
         cogwheel.rotateCentered(Direction.get(Direction.AxisDirection.POSITIVE, Direction.Axis.Y), angle);
         m.popPose();
 
-        m.translate(offset.x, offset.y, offset.z);
-
+        m.translate(baseOffset.x, baseOffset.y, baseOffset.z);
         cogwheel.light(matrices.getWorld(), ContraptionRenderDispatcher.getContraptionWorldLight(context, renderWorld))
                 .renderInto(matrices.getViewProjection(), builder);
 
+        double sliderOffset = 0;
+        if (speed != 0) {
+            sliderOffset = calcSliderOffset(context.world, direction);
+        }
+        slider.transform(m);
+
+        slider.translate(Common.linear(axis, sliderOffset))
+                .light(matrices.getWorld(), ContraptionRenderDispatcher.getContraptionWorldLight(context, renderWorld))
+                .renderInto(matrices.getViewProjection(), builder);
         m.popPose();
     }
 }

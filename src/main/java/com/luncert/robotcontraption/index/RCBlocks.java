@@ -1,6 +1,7 @@
 package com.luncert.robotcontraption.index;
 
 import com.luncert.robotcontraption.RobotContraption;
+import com.luncert.robotcontraption.compat.create.actor.VacuumPumpMovementBehaviour;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperItem;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineBlock;
@@ -8,6 +9,7 @@ import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpBlock;
 import com.luncert.robotcontraption.groups.ModGroup;
 import com.luncert.robotcontraption.content.aircraft.AircraftAnchorBlock;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
+import com.simibubi.create.AllMovementBehaviours;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.AllSections;
@@ -71,6 +73,7 @@ public class RCBlocks {
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .addLayer(() -> RenderType::translucent)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .onRegister(AllMovementBehaviours.movementBehaviour(new VacuumPumpMovementBehaviour()))
                     .item()
                     .transform(customItemModel())
                     .register();

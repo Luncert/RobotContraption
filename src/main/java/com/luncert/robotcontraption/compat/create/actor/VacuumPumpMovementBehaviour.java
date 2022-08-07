@@ -2,10 +2,9 @@ package com.luncert.robotcontraption.compat.create.actor;
 
 import com.jozufozu.flywheel.api.MaterialManager;
 import com.jozufozu.flywheel.core.virtual.VirtualRenderWorld;
+import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpActorInstance;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpBlock;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpRenderer;
-import com.simibubi.create.content.contraptions.components.deployer.DeployerActorInstance;
-import com.simibubi.create.content.contraptions.components.deployer.DeployerRenderer;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementBehaviour;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
 import com.simibubi.create.content.contraptions.components.structureMovement.render.ActorInstance;
@@ -14,7 +13,6 @@ import com.simibubi.create.content.contraptions.components.structureMovement.ren
 import com.simibubi.create.content.contraptions.fluids.actors.FluidSplashPacket;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.networking.AllPackets;
-import com.simibubi.create.foundation.utility.BBHelper;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -28,16 +26,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nullable;
 
@@ -68,7 +62,7 @@ public class VacuumPumpMovementBehaviour implements MovementBehaviour {
     @Override
     public ActorInstance createInstance(MaterialManager materialManager, VirtualRenderWorld simulationWorld,
                                         MovementContext context) {
-        return new DeployerActorInstance(materialManager, simulationWorld, context);
+        return new VacuumPumpActorInstance(materialManager, simulationWorld, context);
     }
 
     @Override
