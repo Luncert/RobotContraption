@@ -1,6 +1,7 @@
 package com.luncert.robotcontraption.content.aircraft;
 
 import com.luncert.robotcontraption.common.ActionCallback;
+import com.luncert.robotcontraption.common.Signal;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
@@ -56,7 +57,7 @@ public class AircraftEntity extends Entity {
     private BlockState stationBlockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
 
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
-    private final Queue<Runnable> actionQueue = new ArrayDeque<>();
+    private final Signal signal = new Signal();
     public boolean isMoving;
 
     private int actionCoolDown; // see lerp
@@ -130,12 +131,11 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        actionQueue.add(() -> {
-            setTargetMovement(new AircraftMovement(Axis.Y, true,
-                    (float) position().get(Axis.Y) + n));
-            isMoving = true;
-            asyncCallbacks.add(callback);
-        });
+        checkSignal();
+        setTargetMovement(new AircraftMovement(Axis.Y, true,
+                (float) position().get(Axis.Y) + n));
+        isMoving = true;
+        asyncCallbacks.add(callback);
     }
 
     public void down(int n, ActionCallback callback) throws AircraftMovementException {
@@ -143,12 +143,11 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        actionQueue.add(() -> {
-            setTargetMovement(new AircraftMovement(Axis.Y, false,
-                    (float) position().get(Axis.Y) - n));
-            isMoving = true;
-            asyncCallbacks.add(callback);
-        });
+        checkSignal();
+        setTargetMovement(new AircraftMovement(Axis.Y, false,
+                (float) position().get(Axis.Y) - n));
+        isMoving = true;
+        asyncCallbacks.add(callback);
     }
 
     public void forward(int n, ActionCallback callback) throws AircraftMovementException {
@@ -156,7 +155,8 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        actionQueue.add(() -> moveForward(n, callback));
+        checkSignal();
+        moveForward(n, callback);
     }
 
     public void turnLeft(ActionCallback callback) throws AircraftMovementException {
@@ -164,7 +164,8 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        actionQueue.add(() -> rotate(-90, callback));
+        checkSignal();
+        rotate(-90, callback);
     }
 
     public void turnRight(ActionCallback callback) throws AircraftMovementException {
@@ -172,7 +173,14 @@ public class AircraftEntity extends Entity {
             throw new AircraftMovementException("cannot_update_moving_aircraft");
         }
 
-        actionQueue.add(() -> rotate(90, callback));
+        checkSignal();
+        rotate(90, callback);
+    }
+
+    private void checkSignal() {
+        if (actionCoolDown > 0) {
+            signal.get();
+        }
     }
 
     private void rotate(int degree, ActionCallback callback) {
@@ -356,13 +364,12 @@ public class AircraftEntity extends Entity {
     }
 
     private void tickMotion() {
-        if (actionCoolDown-- > 0) {
+        if (actionCoolDown > 0) {
+            actionCoolDown--;
+            if (actionCoolDown == 0 && !level.isClientSide) {
+                signal.set();
+            }
             return;
-        }
-
-        if (!actionQueue.isEmpty()) {
-            Runnable action = actionQueue.remove();
-            action.run();
         }
 
         boolean isStalled = getContraptionEntity().map(AircraftContraptionEntity::isStalled).orElse(false);
