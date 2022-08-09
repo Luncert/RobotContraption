@@ -14,7 +14,7 @@ public class FuelEngineComponent implements IAircraftComponent {
     private AircraftAccessor aircraftAccessor;
 
     @Override
-    public void init(AircraftAccessor aircraftAccessor) {
+    public void init(AircraftAccessor aircraftAccessor, String name) {
         this.aircraftAccessor = aircraftAccessor;
     }
 

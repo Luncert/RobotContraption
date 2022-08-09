@@ -9,7 +9,7 @@ public class VacuumPumpComponent implements IAircraftComponent {
     private AircraftAccessor accessor;
 
     @Override
-    public void init(AircraftAccessor aircraftAccessor) {
+    public void init(AircraftAccessor aircraftAccessor, String name) {
         this.accessor = aircraftAccessor;
     }
 

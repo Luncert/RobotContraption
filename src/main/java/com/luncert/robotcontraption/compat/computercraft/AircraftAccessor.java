@@ -3,8 +3,13 @@ package com.luncert.robotcontraption.compat.computercraft;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.content.aircraft.AircraftEntity;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
+import com.luncert.robotcontraption.util.Common;
 import dan200.computercraft.api.peripheral.IComputerAccess;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +49,46 @@ public final class AircraftAccessor {
     public <T extends IAircraftComponent> List<T> findAll(String componentType) {
         List<IAircraftComponent> components = station.getComponents().get(componentType);
         return components == null ? Collections.emptyList() : (List<T>) components;
+    }
+
+    public Optional<IAircraftComponent> getComponent(String name) {
+        String componentType;
+        int componentId;
+        try {
+            String[] split = name.split("-");
+            componentType = split[0];
+            componentId = Integer.parseInt(split[1]);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("invalid component name");
+        }
+
+        List<IAircraftComponent> components = station.getComponents().get(componentType);
+        if (components != null && components.size() > componentId) {
+            return Optional.of(components.get(componentId));
+        }
+
+        return Optional.empty();
+    }
+
+    public BlockPos getComponentPos(String name) {
+        StructureTemplate.StructureBlockInfo blockInfo = contraption.getComponentBlockInfo(name);
+        if (blockInfo == null) {
+            throw new IllegalArgumentException("block info missing for " + name);
+        }
+
+        BlockPos anchorPos = contraption.getAnchorPos();
+        BlockPos relativeDist = blockInfo.pos.subtract(anchorPos);
+        Vec3 componentPos = aircraft.getAircraftPosition().add(Common.convert(relativeDist));
+        return new BlockPos(componentPos.x, componentPos.y, componentPos.z);
+    }
+
+    public BlockState getComponentBlockState(String name) {
+        StructureTemplate.StructureBlockInfo blockInfo = contraption.getComponentBlockInfo(name);
+        if (blockInfo == null) {
+            throw new IllegalArgumentException("block info missing for " + name);
+        }
+
+        return blockInfo.state;
     }
 
     public void queueEvent(String event, Object... args) {

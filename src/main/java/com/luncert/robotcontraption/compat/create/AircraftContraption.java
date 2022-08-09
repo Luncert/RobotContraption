@@ -17,7 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.LazyOptional;
@@ -30,6 +30,7 @@ import static com.luncert.robotcontraption.index.RCContraptionTypes.AIRCRAFT;
 public class AircraftContraption extends Contraption {
 
     private final Map<String, List<IAircraftComponent>> components = new HashMap<>();
+    private final Map<String, StructureBlockInfo> componentBlockInfoMap = new HashMap<>();
 
     public EAircraftMovementMode rotationMode;
 
@@ -45,6 +46,14 @@ public class AircraftContraption extends Contraption {
         return components;
     }
 
+    public StructureBlockInfo getComponentBlockInfo(String name) {
+        return componentBlockInfoMap.get(name);
+    }
+
+    public BlockPos getAnchorPos() {
+        return componentBlockInfoMap.get("anchor").pos;
+    }
+
     @Override
     protected ContraptionType getType() {
         return AIRCRAFT;
@@ -56,7 +65,7 @@ public class AircraftContraption extends Contraption {
         if (!searchMovedStructure(world, pos, null))
             return false;
 
-        addBlock(pos, Pair.of(new StructureTemplate.StructureBlockInfo(
+        addBlock(pos, Pair.of(new StructureBlockInfo(
                 pos, RCBlocks.AIRCRAFT_ANCHOR.getDefaultState(), null), null));
 
         return blocks.size() != 1;
@@ -70,26 +79,30 @@ public class AircraftContraption extends Contraption {
     }
 
     @Override
-    protected Pair<StructureTemplate.StructureBlockInfo, BlockEntity> capture(Level world, BlockPos pos) {
-        Pair<StructureTemplate.StructureBlockInfo, BlockEntity> pair = super.capture(world, pos);
-        StructureTemplate.StructureBlockInfo capture = pair.getKey();
-        captureAircraftComponent(pair.getValue());
+    protected Pair<StructureBlockInfo, BlockEntity> capture(Level world, BlockPos pos) {
+        Pair<StructureBlockInfo, BlockEntity> pair = super.capture(world, pos);
+        StructureBlockInfo capture = pair.getKey();
+        captureAircraftComponent(pair);
         if (!RCBlocks.AIRCRAFT_STATION.has(capture.state)) {
             return pair;
         }
 
         // replace aircraft station with anchor block
-        return Pair.of(new StructureTemplate.StructureBlockInfo(
-                pos, AircraftStationBlock.createAnchor(capture.state), null), pair.getValue());
+        StructureBlockInfo info = new StructureBlockInfo(pos, AircraftStationBlock.createAnchor(capture.state), null);
+        componentBlockInfoMap.put("anchor", info);
+        return Pair.of(info, pair.getValue());
     }
 
-    private void captureAircraftComponent(BlockEntity blockEntity) {
-        LazyOptional<IAircraftComponent> opt = blockEntity.getCapability(RCCapabilities.CAPABILITY_AIRCRAFT_COMPONENT);
+    private void captureAircraftComponent(Pair<StructureBlockInfo, BlockEntity> entry) {
+        LazyOptional<IAircraftComponent> opt = entry.getValue().getCapability(RCCapabilities.CAPABILITY_AIRCRAFT_COMPONENT);
         opt.ifPresent(c ->
                 components.compute(c.getComponentType(), (k, v) -> {
                    if (v == null) {
                        v = new LinkedList<>();
                    }
+
+                   componentBlockInfoMap.put(c.getComponentType() + "-" + v.size(), entry.getKey());
+
                    v.add(c);
                    return v;
                 }));

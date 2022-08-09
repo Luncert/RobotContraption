@@ -58,7 +58,7 @@ public class AircraftStationTileEntity extends KineticTileEntity {
 
         // init components
         AircraftAccessor accessor = new AircraftAccessor(level, peripheral, this, entity, entity.getContraption().orElseThrow());
-        getComponents().values().forEach(v -> v.forEach(component -> component.init(accessor)));
+        getComponents().values().forEach(v -> v.forEach(component -> component.init(accessor, )));
     }
 
     public void dissemble() throws AircraftAssemblyException {

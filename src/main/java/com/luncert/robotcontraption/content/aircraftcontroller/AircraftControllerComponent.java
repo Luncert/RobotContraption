@@ -24,7 +24,7 @@ public class AircraftControllerComponent implements IAircraftComponent {
     private int executionId;
 
     @Override
-    public void init(AircraftAccessor aircraftAccessor) {
+    public void init(AircraftAccessor aircraftAccessor, String name) {
         accessor = aircraftAccessor;
     }
 

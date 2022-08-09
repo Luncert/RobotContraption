@@ -20,7 +20,7 @@ public class GeoScannerComponent implements IAircraftComponent {
     private AircraftAccessor accessor;
 
     @Override
-    public void init(AircraftAccessor accessor) {
+    public void init(AircraftAccessor accessor, String name) {
         this.accessor = accessor;
     }
 

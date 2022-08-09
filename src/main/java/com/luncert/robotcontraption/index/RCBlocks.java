@@ -3,6 +3,7 @@ package com.luncert.robotcontraption.index;
 import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.create.actor.VacuumPumpMovementBehaviour;
 import com.luncert.robotcontraption.content.aircraftcontroller.AircraftControllerBlock;
+import com.luncert.robotcontraption.content.blockreader.BlockReaderBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperItem;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineBlock;
@@ -99,6 +100,14 @@ public class RCBlocks {
 
     public static final BlockEntry<StorageAccessorBlock> STORAGE_ACCESSOR =
             REGISTRATE.block("storage_accessor", StorageAccessorBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(BlockBehaviour.Properties::noOcclusion)
+                    .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .simpleItem()
+                    .register();
+
+    public static final BlockEntry<BlockReaderBlock> BLOCK_READER =
+            REGISTRATE.block("block_reader", BlockReaderBlock::new)
                     .initialProperties(SharedProperties::stone)
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)

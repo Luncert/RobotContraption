@@ -5,6 +5,7 @@ import com.luncert.robotcontraption.common.HorizontalHalfShaftInstance;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationRenderer;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
 import com.luncert.robotcontraption.content.aircraftcontroller.AircraftControllerTileEntity;
+import com.luncert.robotcontraption.content.blockreader.BlockReaderTileEntity;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperTileEntity;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineInstance;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineRenderer;
@@ -64,6 +65,12 @@ public class RCTileEntities {
             RobotContraption.registrate()
                     .tileEntity("storage_accessor", StorageAccessorTileEntity::new)
                     .validBlocks(RCBlocks.STORAGE_ACCESSOR)
+                    .register();
+
+    public static final BlockEntityEntry<BlockReaderTileEntity> BLOCK_READER =
+            RobotContraption.registrate()
+                    .tileEntity("block_reader", BlockReaderTileEntity::new)
+                    .validBlocks(RCBlocks.BLOCK_READER)
                     .register();
 
     public static void register() {}

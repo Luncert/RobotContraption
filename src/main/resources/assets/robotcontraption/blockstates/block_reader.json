@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "robotcontraption:block/block_reader",
+      "x": 90
+    },
+    "facing=down": {
+      "model": "robotcontraption:block/block_reader",
+      "x": -90
+    },
+    "facing=north": {
+      "model": "robotcontraption:block/block_reader",
+      "y": 180
+    },
+    "facing=south": {
+      "model": "robotcontraption:block/block_reader",
+      "y": 0
+    },
+    "facing=west": {
+      "model": "robotcontraption:block/block_reader",
+      "y": 90
+    },
+    "facing=east": {
+      "model": "robotcontraption:block/block_reader",
+      "y": 270
+    }
+  }
+}

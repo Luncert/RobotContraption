@@ -11,7 +11,7 @@ public class StorageAccessorComponent implements IAircraftComponent {
     private AircraftAccessor accessor;
 
     @Override
-    public void init(AircraftAccessor aircraftAccessor) {
+    public void init(AircraftAccessor aircraftAccessor, String name) {
         accessor = aircraftAccessor;
     }
 
