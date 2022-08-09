@@ -1,7 +1,9 @@
 package com.luncert.robotcontraption.content.fuelengine;
 
-import com.luncert.robotcontraption.common.Capabilities;
+import com.luncert.robotcontraption.compat.computercraft.AircraftAccessor;
+import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
 import com.luncert.robotcontraption.index.RCBlocks;
+import com.luncert.robotcontraption.index.RCCapabilities;
 import com.luncert.robotcontraption.util.Common;
 import com.luncert.robotcontraption.util.Lang;
 import com.mrh0.createaddition.index.CAFluids;
@@ -10,6 +12,7 @@ import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity
 import com.simibubi.create.content.contraptions.particle.AirFlowParticleData;
 import com.simibubi.create.foundation.tileEntity.TileEntityBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.scrollvalue.ScrollValueBehaviour;
+import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -19,6 +22,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +33,6 @@ import java.util.Random;
 
 public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
 
-    private final LazyOptional<FuelEngineComponent> component;
     private final LazyOptional<FluidTank> fluidTank;
 
     private boolean active = false;
@@ -44,7 +47,6 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
     public FuelEngineTileEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
 
-        component = LazyOptional.of(FuelEngineComponent::new);
         fluidTank = LazyOptional.of(() -> new FluidTank(1000, this::fluidFilter));
     }
 
@@ -197,8 +199,8 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
     @NotNull
     @Override
     public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        if (Capabilities.isAircraftComponent(cap)) {
-            return component.cast();
+        if (RCCapabilities.isAircraftComponent(cap)) {
+            return LazyOptional.of(FuelEngineComponent::new).cast();
         }
         if (isFluidHandlerCap(cap)) {
             return fluidTank.cast();
@@ -209,14 +211,12 @@ public class FuelEngineTileEntity extends GeneratingKineticTileEntity {
     @Override
     public void setRemoved() {
         super.setRemoved();
-        component.invalidate();
         fluidTank.invalidate();
     }
 
     // cc api
 
     public boolean setRPM(int rpm) {
-        //System.out.println("SETSPEED" + rpm);
         rpm = Math.max(Math.min(rpm, 256), 0);
         cc_new_rpm = rpm;
         cc_update_rpm = true;

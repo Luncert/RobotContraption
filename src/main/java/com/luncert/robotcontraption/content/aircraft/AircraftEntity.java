@@ -2,6 +2,7 @@ package com.luncert.robotcontraption.content.aircraft;
 
 import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.common.Signal;
+import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
@@ -23,7 +24,6 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -31,7 +31,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
@@ -58,9 +57,9 @@ public class AircraftEntity extends Entity {
 
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
     private final Signal signal = new Signal();
+    private int actionCoolDown; // see lerp
     public boolean isMoving;
 
-    private int actionCoolDown; // see lerp
     private int lerpSteps;
     private double lerpX;
     private double lerpY;
@@ -127,10 +126,8 @@ public class AircraftEntity extends Entity {
     // action api
 
     public void up(int n, ActionCallback callback) throws AircraftMovementException {
-        if (isMoving) {
-            throw new AircraftMovementException("cannot_update_moving_aircraft");
-        }
-
+        checkSpeed();
+        checkMotion();
         checkSignal();
         setTargetMovement(new AircraftMovement(Axis.Y, true,
                 (float) position().get(Axis.Y) + n));
@@ -139,10 +136,8 @@ public class AircraftEntity extends Entity {
     }
 
     public void down(int n, ActionCallback callback) throws AircraftMovementException {
-        if (isMoving) {
-            throw new AircraftMovementException("cannot_update_moving_aircraft");
-        }
-
+        checkSpeed();
+        checkMotion();
         checkSignal();
         setTargetMovement(new AircraftMovement(Axis.Y, false,
                 (float) position().get(Axis.Y) - n));
@@ -151,28 +146,22 @@ public class AircraftEntity extends Entity {
     }
 
     public void forward(int n, ActionCallback callback) throws AircraftMovementException {
-        if (isMoving) {
-            throw new AircraftMovementException("cannot_update_moving_aircraft");
-        }
-
+        checkSpeed();
+        checkMotion();
         checkSignal();
         moveForward(n, callback);
     }
 
     public void turnLeft(ActionCallback callback) throws AircraftMovementException {
-        if (isMoving) {
-            throw new AircraftMovementException("cannot_update_moving_aircraft");
-        }
-
+        checkSpeed();
+        checkMotion();
         checkSignal();
         rotate(-90, callback);
     }
 
     public void turnRight(ActionCallback callback) throws AircraftMovementException {
-        if (isMoving) {
-            throw new AircraftMovementException("cannot_update_moving_aircraft");
-        }
-
+        checkSpeed();
+        checkMotion();
         checkSignal();
         rotate(90, callback);
     }
@@ -206,6 +195,18 @@ public class AircraftEntity extends Entity {
         asyncCallbacks.add(callback);
     }
 
+    private void checkSpeed() throws AircraftMovementException {
+        if (getSpeed() == 0) {
+            throw new AircraftMovementException("speed_is_zero");
+        }
+    }
+
+    private void checkMotion() throws AircraftMovementException {
+        if (isMoving) {
+            throw new AircraftMovementException("cannot_update_moving_aircraft");
+        }
+    }
+
     // info api
 
     public Vec3 getAircraftPosition() {
@@ -214,71 +215,21 @@ public class AircraftEntity extends Entity {
         return new Vec3(blockPos.getX(), blockPos.getY() + 1, blockPos.getZ());
     }
 
-    public float getStorageUsage() {
-        Optional<AircraftContraption> opt = getContraption();
-        if (opt.isEmpty()) {
-            throw new AssertionError("not reachable");
-        }
-
-        AircraftContraption contraption = opt.get();
-        IItemHandlerModifiable sharedInventory = contraption.getSharedInventory();
-
-        int totalSpace = 0;
-        float used = 0;
-        for (int slot = 0; slot < sharedInventory.getSlots(); slot++) {
-            ItemStack stackInSlot = sharedInventory.getStackInSlot(slot);
-            int space = Math.min(stackInSlot.getMaxStackSize(), sharedInventory.getSlotLimit(slot));
-            int count = stackInSlot.getCount();
-            if (space == 0)
-                continue;
-
-            totalSpace++;
-            used += count * (1f / space);
-        }
-        return used / totalSpace;
-    }
-
-    public float getStorageSlotUsage() {
-        Optional<AircraftContraption> opt = getContraption();
-        if (opt.isEmpty()) {
-            throw new AssertionError("not reachable");
-        }
-
-        AircraftContraption contraption = opt.get();
-        IItemHandlerModifiable sharedInventory = contraption.getSharedInventory();
-
-        int totalSpace = 0;
-        float usedSpace = 0;
-        for (int slot = 0; slot < sharedInventory.getSlots(); slot++) {
-            ItemStack stackInSlot = sharedInventory.getStackInSlot(slot);
-            int space = Math.min(stackInSlot.getMaxStackSize(), sharedInventory.getSlotLimit(slot));
-            int count = stackInSlot.getCount();
-            if (space == 0)
-                continue;
-
-            totalSpace++;
-
-            if (count > 0) {
-                usedSpace++;
-            }
-        }
-        return usedSpace / totalSpace;
-    }
-
     public Direction getAircraftFacing() {
         return Direction.fromYRot(getTargetYRot());
     }
 
-    private Optional<AircraftContraption> getContraption() {
+    public Optional<AircraftContraption> getContraption() {
         return getContraptionEntity().map(e -> (AircraftContraption) e.getContraption());
     }
 
     private Optional<AircraftContraptionEntity> getContraptionEntity() {
         List<Entity> passengers = getPassengers();
         if (!passengers.isEmpty()) {
-            Entity entity = passengers.get(0);
-            if (entity instanceof AircraftContraptionEntity contraptionEntity) {
-                return Optional.of(contraptionEntity);
+            for (Entity passenger : passengers) {
+                if (passenger instanceof AircraftContraptionEntity contraptionEntity) {
+                    return Optional.of(contraptionEntity);
+                }
             }
         }
 
@@ -312,6 +263,7 @@ public class AircraftEntity extends Entity {
         tickLerp();
         tickCollide();
         tickMotion();
+        tickComponents();
     }
 
     private void tickLerp() {
@@ -382,6 +334,20 @@ public class AircraftEntity extends Entity {
         }
     }
 
+    private void tickComponents() {
+        if (level.isClientSide) {
+            return;
+        }
+
+        getContraption().ifPresent(contraption -> {
+            for (List<IAircraftComponent> value : contraption.getComponents().values()) {
+                for (IAircraftComponent component : value) {
+                    component.tickComponent();
+                }
+            }
+        });
+    }
+
     private Optional<Vec3> updateMotion() {
         Optional<AircraftMovement> opt = getTargetMovement();
         if (opt.isPresent()) {
@@ -440,9 +406,7 @@ public class AircraftEntity extends Entity {
     }
 
     public void setSpeed(int speed) throws AircraftMovementException {
-        if (isMoving) {
-            throw new AircraftMovementException("cannot_update_moving_aircraft");
-        }
+        checkMotion();
         entityData.set(SPEED, Mth.clamp(Math.abs(speed), 0, 255));
     }
 

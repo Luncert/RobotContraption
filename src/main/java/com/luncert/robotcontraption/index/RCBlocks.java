@@ -2,9 +2,12 @@ package com.luncert.robotcontraption.index;
 
 import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.create.actor.VacuumPumpMovementBehaviour;
+import com.luncert.robotcontraption.content.aircraftcontroller.AircraftControllerBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperItem;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineBlock;
+import com.luncert.robotcontraption.content.geoscanner.GeoScannerBlock;
+import com.luncert.robotcontraption.content.storageaccessor.StorageAccessorBlock;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpBlock;
 import com.luncert.robotcontraption.groups.ModGroup;
 import com.luncert.robotcontraption.content.aircraft.AircraftAnchorBlock;
@@ -76,6 +79,30 @@ public class RCBlocks {
                     .onRegister(AllMovementBehaviours.movementBehaviour(new VacuumPumpMovementBehaviour()))
                     .item()
                     .transform(customItemModel())
+                    .register();
+
+    public static final BlockEntry<GeoScannerBlock> GEO_SCANNER =
+            REGISTRATE.block("geo_scanner", GeoScannerBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(BlockBehaviour.Properties::noOcclusion)
+                    .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .simpleItem()
+                    .register();
+
+    public static final BlockEntry<AircraftControllerBlock> AIRCRAFT_CONTROLLER =
+            REGISTRATE.block("aircraft_controller", AircraftControllerBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(BlockBehaviour.Properties::noOcclusion)
+                    .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .simpleItem()
+                    .register();
+
+    public static final BlockEntry<StorageAccessorBlock> STORAGE_ACCESSOR =
+            REGISTRATE.block("storage_accessor", StorageAccessorBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(BlockBehaviour.Properties::noOcclusion)
+                    .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .simpleItem()
                     .register();
 
     public static void register() {

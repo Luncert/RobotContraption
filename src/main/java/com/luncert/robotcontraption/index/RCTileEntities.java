@@ -4,10 +4,13 @@ import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.common.HorizontalHalfShaftInstance;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationRenderer;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
+import com.luncert.robotcontraption.content.aircraftcontroller.AircraftControllerTileEntity;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperTileEntity;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineInstance;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineRenderer;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineTileEntity;
+import com.luncert.robotcontraption.content.geoscanner.GeoScannerTileEntity;
+import com.luncert.robotcontraption.content.storageaccessor.StorageAccessorTileEntity;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpInstance;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpRenderer;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpTileEntity;
@@ -43,6 +46,24 @@ public class RCTileEntities {
                     .instance(() -> VacuumPumpInstance::new, false)
                     .validBlocks(RCBlocks.VACUUM_PUMP)
                     .renderer(() -> VacuumPumpRenderer::new)
+                    .register();
+
+    public static final BlockEntityEntry<GeoScannerTileEntity> GEO_SCANNER =
+            RobotContraption.registrate()
+                    .tileEntity("geo_scanner", GeoScannerTileEntity::new)
+                    .validBlocks(RCBlocks.GEO_SCANNER)
+                    .register();
+
+    public static final BlockEntityEntry<AircraftControllerTileEntity> AIRCRAFT_CONTROLLER =
+            RobotContraption.registrate()
+                    .tileEntity("aircraft_controller", AircraftControllerTileEntity::new)
+                    .validBlocks(RCBlocks.AIRCRAFT_CONTROLLER)
+                    .register();
+
+    public static final BlockEntityEntry<StorageAccessorTileEntity> STORAGE_ACCESSOR =
+            RobotContraption.registrate()
+                    .tileEntity("storage_accessor", StorageAccessorTileEntity::new)
+                    .validBlocks(RCBlocks.STORAGE_ACCESSOR)
                     .register();
 
     public static void register() {}

@@ -11,4 +11,12 @@ public class LocalVariable<T> {
     public T get() {
         return obj;
     }
+
+    public boolean isPresent() {
+        return obj != null;
+    }
+
+    public boolean isEmpty() {
+        return obj == null;
+    }
 }

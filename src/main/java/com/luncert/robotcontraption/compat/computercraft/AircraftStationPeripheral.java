@@ -1,49 +1,28 @@
 package com.luncert.robotcontraption.compat.computercraft;
 
-import com.google.common.collect.ImmutableMap;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
-import com.luncert.robotcontraption.exception.AircraftMovementException;
-import dan200.computercraft.api.lua.LuaException;
-import dan200.computercraft.api.lua.LuaFunction;
-import dan200.computercraft.api.lua.MethodResult;
+import dan200.computercraft.api.lua.*;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
-import net.minecraft.core.Direction;
-import net.minecraft.world.phys.Vec3;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.Consumer;
-
-import static com.luncert.robotcontraption.compat.computercraft.AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE;
 
 public class AircraftStationPeripheral implements IPeripheral {
 
     protected String type;
     protected AircraftStationTileEntity tileEntity;
-    private int executionId;
 
     protected final List<IComputerAccess> connected = new ArrayList<>();
 
     public AircraftStationPeripheral(String type, AircraftStationTileEntity tileEntity) {
         this.type = type;
         this.tileEntity = tileEntity;
-    }
-
-    // computer access
-
-    public void queueEvent(String event, Object... args) {
-        withComputer(c -> c.queueEvent(event, args));
-    }
-
-    private void withComputer(Consumer<IComputerAccess> action) {
-        for (IComputerAccess computer : connected) {
-            action.accept(computer);
-        }
     }
 
     public List<IComputerAccess> getConnectedComputers() {
@@ -80,8 +59,6 @@ public class AircraftStationPeripheral implements IPeripheral {
 
     @LuaFunction(mainThread = true)
     public final void assemble(String rotationMode) throws LuaException {
-        checkTileEntity();
-
         EAircraftMovementMode mode;
         try {
             mode = EAircraftMovementMode.valueOf(rotationMode.toUpperCase());
@@ -99,8 +76,6 @@ public class AircraftStationPeripheral implements IPeripheral {
 
     @LuaFunction(mainThread = true)
     public final void dissemble() throws LuaException {
-        checkTileEntity();
-
         try {
             tileEntity.dissemble();
         } catch (AircraftAssemblyException e) {
@@ -110,240 +85,92 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public final MethodResult up(int n) throws LuaException {
-        checkTileEntity();
-
-        if (n <= 0) {
-            throw new LuaException("n must be positive");
+    public List<String> getComponents() throws LuaException {
+        Map<String, List<IAircraftComponent>> components = tileEntity.getComponents();
+        List<String> result = new ArrayList<>(components.size());
+        for (List<IAircraftComponent> value : components.values()) {
+            for (int i = 0; i < value.size(); i++) {
+                IAircraftComponent c = value.get(i);
+                result.add(c.getComponentType() + "-" + i);
+            }
         }
-
-        int executionId = this.executionId++;
-        try {
-            tileEntity.up(n, data -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
-        } catch (AircraftMovementException | AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-
-        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
+        return result;
     }
 
     @LuaFunction
-    public final MethodResult down(int n) throws LuaException {
-        checkTileEntity();
-
-        if (n <= 0) {
-            throw new LuaException("n must be positive");
-        }
-
-        int executionId = this.executionId++;
+    public Map<String, ILuaFunction> getComponent(String name) throws LuaException {
+        String componentType;
+        int componentId;
         try {
-            tileEntity.down(n, data -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
-        } catch (AircraftMovementException | AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
+            String[] split = name.split("-");
+            componentType = split[0];
+            componentId = Integer.parseInt(split[1]);
+        } catch (Exception e) {
+            throw new LuaException("invalid component name");
         }
 
-        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
+        List<IAircraftComponent> components = tileEntity.getComponents().get(componentType);
+        if (components != null && components.size() > componentId) {
+            IAircraftComponent c = components.get(componentId);
+            Map<String, ILuaFunction> functions = new HashMap<>();
+            for (Method method : c.getClass().getDeclaredMethods()) {
+                if (method.isAnnotationPresent(LuaFunction.class)) {
+                    functions.put(method.getName(), wrapComponentMethod(c, method));
+                }
+            }
+            return functions;
+        }
+
+        return Collections.emptyMap();
     }
 
-    @LuaFunction
-    public final MethodResult forward(int n) throws LuaException {
-        checkTileEntity();
-
-        if (n <= 0) {
-            throw new LuaException("n must be positive");
-        }
-
-        int executionId = this.executionId++;
-        try {
-            tileEntity.forward(n, data -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
-        } catch (AircraftMovementException | AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-
-        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
+    private ILuaFunction wrapComponentMethod(IAircraftComponent c, Method method) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        return arguments -> {
+            Object[] args = parseArguments(arguments, parameterTypes);
+            try {
+                Object result = method.invoke(c, args);
+                if (result instanceof MethodResult r) {
+                    return r;
+                }
+                return MethodResult.of(result);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new LuaException(e.getMessage());
+            }
+        };
     }
 
-    @LuaFunction
-    public final MethodResult turnLeft() throws LuaException {
-        checkTileEntity();
-
-        int executionId = this.executionId++;
-        try {
-            tileEntity.turnLeft(data -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
-        } catch (AircraftMovementException | AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
+    @SuppressWarnings("unchecked")
+    private Object[] parseArguments(IArguments arguments, Class<?>[] parameterTypes) throws LuaException {
+        if (arguments.count() != parameterTypes.length) {
+            throw new LuaException(parameterTypes.length + " arguments expected, received " + arguments.count());
         }
 
-        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
-    }
-
-    @LuaFunction
-    public final MethodResult turnRight() throws LuaException {
-        checkTileEntity();
-
-        int executionId = this.executionId++;
-        try {
-            tileEntity.turnRight(data -> queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
-        } catch (AircraftMovementException | AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
+        Object[] args = new Object[parameterTypes.length];
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class<?> type = parameterTypes[i];
+            Object value;
+            if (boolean.class.isAssignableFrom(type) || Boolean.class.isAssignableFrom(type)) {
+                value = arguments.getBoolean(i);
+            } else if (byte.class.isAssignableFrom(type) || Byte.class.isAssignableFrom(type)) {
+                value = arguments.getBytes(i);
+            } else if (int.class.isAssignableFrom(type) || Integer.class.isAssignableFrom(type)) {
+                value = arguments.getInt(i);
+            } else if (double.class.isAssignableFrom(type) || Double.class.isAssignableFrom(type)) {
+                value = arguments.getFiniteDouble(i);
+            } else if (long.class.isAssignableFrom(type) || Long.class.isAssignableFrom(type)) {
+                value = arguments.getLong(i);
+            } else if (Map.class.isAssignableFrom(type)) {
+                value = arguments.getTable(i);
+            } else if (String.class.isAssignableFrom(type)) {
+                value = arguments.getString(i);
+            } else if (Enum.class.isAssignableFrom(type)) {
+                value = arguments.getEnum(i, (Class<? extends Enum>) type);
+            } else {
+                throw new LuaException("invalid argument " + i + ", " + type + " expected");
+            }
+            args[i] = value;
         }
-        return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
-    }
-
-    @LuaFunction(mainThread = true)
-    public final void setSpeed(int speed) throws LuaException {
-        checkTileEntity();
-
-        try {
-            tileEntity.setAircraftSpeed(speed);
-        } catch (AircraftAssemblyException | AircraftMovementException e) {
-            throw new LuaException(e.getMessage());
-        }
-    }
-
-    @LuaFunction(mainThread = true)
-    public final int getSpeed() throws LuaException {
-        checkTileEntity();
-
-        try {
-            return tileEntity.getAircraftSpeed();
-        } catch (AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-    }
-
-    @LuaFunction
-    public final Map<String, Double> getAircraftPosition() throws LuaException {
-        checkTileEntity();
-
-        try {
-            Vec3 pos = tileEntity.getAircraftPosition();
-            return ImmutableMap.of(
-                "x", pos.x,
-                "y", pos.y,
-                "z", pos.z
-            );
-        } catch (AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-    }
-
-    @LuaFunction
-    public final Map<String, Double> getStationPosition() throws LuaException {
-        checkTileEntity();
-
-        Vec3 pos = tileEntity.getStationPosition();
-        return ImmutableMap.of(
-                "x", pos.x,
-                "y", pos.y,
-                "z", pos.z
-        );
-    }
-
-    @LuaFunction
-    public final Map<String, Object> getAircraftFacing() throws LuaException {
-        checkTileEntity();
-
-        try {
-            Direction direction = tileEntity.getAircraftFacing();
-            Direction.AxisDirection axisDirection = direction.getAxisDirection();
-            return ImmutableMap.of(
-                    "axis", direction.getAxis().getName(),
-                    "step", axisDirection.getStep()
-            );
-        } catch (AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-    }
-
-    @LuaFunction
-    public final Map<String, Object> getStationFacing() throws LuaException {
-        checkTileEntity();
-
-        Direction direction = tileEntity.getStationFacing();
-        Direction.AxisDirection axisDirection = direction.getAxisDirection();
-        return ImmutableMap.of(
-                "axis", direction.getAxis().getName(),
-                "step", axisDirection.getStep()
-        );
-    }
-
-    @LuaFunction
-    public final int calcRotationTo(String axis, int step) throws LuaException {
-        checkTileEntity();
-
-        try {
-            Direction.Axis a = Direction.Axis.valueOf(axis);
-            return tileEntity.calcRotationTo(a, step);
-        } catch (IllegalArgumentException e) {
-            throw new LuaException("Invalid argument, must be one of " + Arrays.toString(Direction.Axis.values()));
-        } catch (AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-    }
-
-    // contraption access
-
-    @LuaFunction
-    public final float getStorageUsage() throws LuaException {
-        checkTileEntity();
-
-        try {
-            return tileEntity.getStorageUsage();
-        } catch (AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-    }
-
-    @LuaFunction
-    public final float getStorageSlotUsage() throws LuaException {
-        checkTileEntity();
-
-        try {
-            return tileEntity.getStorageSlotUsage();
-        } catch (AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-    }
-
-    @LuaFunction(mainThread = true)
-    public final MethodResult search(String harvestable) throws LuaException {
-        checkTileEntity();
-
-        EHarvestable h;
-        try {
-            h = EHarvestable.valueOf(harvestable.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new LuaException("Invalid argument, must be one of " + Arrays.toString(EHarvestable.values()));
-        }
-
-        Optional<Pair<Vec3, Vec3>> opt;
-        try {
-            opt = tileEntity.search(h);
-        } catch (AircraftAssemblyException e) {
-            throw new LuaException(e.getMessage());
-        }
-        if (opt.isEmpty()) {
-            return MethodResult.of(false);
-        }
-
-        Pair<Vec3, Vec3> locator = opt.get();
-        Vec3 a = locator.getLeft();
-        Vec3 b = locator.getRight();
-        return MethodResult.of(
-                ImmutableMap.of(
-                        "x1", a.x,
-                        "y1", a.y,
-                        "z1", a.z,
-                        "x2", b.x,
-                        "y2", b.y,
-                        "z2", b.z
-                ));
-    }
-
-    private void checkTileEntity() throws LuaException {
-        if (tileEntity == null) {
-            throw new LuaException("block entity missing");
-        }
+        return args;
     }
 }

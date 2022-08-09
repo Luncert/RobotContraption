@@ -1,14 +1,12 @@
 package com.luncert.robotcontraption.content.aircraft;
 
-import com.luncert.robotcontraption.common.ActionCallback;
-import com.luncert.robotcontraption.common.LocalVariable;
+import com.luncert.robotcontraption.compat.computercraft.AircraftAccessor;
 import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
-import com.luncert.robotcontraption.compat.computercraft.EHarvestable;
+import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
+import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
-import com.luncert.robotcontraption.exception.AircraftMovementException;
-import com.luncert.robotcontraption.util.ScanUtils;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,25 +15,33 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Optional;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static com.simibubi.create.content.contraptions.base.HorizontalKineticBlock.HORIZONTAL_FACING;
 
 public class AircraftStationTileEntity extends KineticTileEntity {
 
-    private final LazyOptional<AircraftStationPeripheral> peripheral;
+    private AircraftStationPeripheral peripheral;
     private AircraftEntity entity;
 
     public AircraftStationTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
 
-        peripheral = LazyOptional.of(() -> Peripherals.createRobotStationPeripheral(this));
+        peripheral = Peripherals.createRobotStationPeripheral(this);
         setLazyTickRate(20);
     }
 
     // api
+
+    public Map<String, List<IAircraftComponent>> getComponents() {
+        if (entity == null) {
+            return Collections.emptyMap();
+        }
+        return entity.getContraption().map(AircraftContraption::getComponents).orElse(Collections.emptyMap());
+    }
 
     public void assemble(EAircraftMovementMode mode) throws AircraftAssemblyException {
         if (entity != null) {
@@ -49,6 +55,10 @@ public class AircraftStationTileEntity extends KineticTileEntity {
             throw new AircraftAssemblyException("structure_not_found");
         }
         this.entity = aircraft;
+
+        // init components
+        AircraftAccessor accessor = new AircraftAccessor(level, peripheral, this, entity, entity.getContraption().orElseThrow());
+        getComponents().values().forEach(v -> v.forEach(component -> component.init(accessor)));
     }
 
     public void dissemble() throws AircraftAssemblyException {
@@ -63,127 +73,12 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         entity = null;
     }
 
-    public void up(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
-        checkContraptionStatus();
-        if (getAircraftSpeed() == 0) {
-            throw new AircraftMovementException("speed_is_zero");
-        }
-        entity.up(n, callback);
-    }
-
-    public void down(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
-        checkContraptionStatus();
-        if (getAircraftSpeed() == 0) {
-            throw new AircraftMovementException("speed_is_zero");
-        }
-        entity.down(n, callback);
-    }
-
-    public void forward(int n, ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
-        checkContraptionStatus();
-        if (getAircraftSpeed() == 0) {
-            throw new AircraftMovementException("speed_is_zero");
-        }
-        entity.forward(n, callback);
-    }
-
-    public void turnLeft(ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
-        checkContraptionStatus();
-        if (getAircraftSpeed() == 0) {
-            throw new AircraftMovementException("speed_is_zero");
-        }
-        entity.turnLeft(callback);
-    }
-
-    public void turnRight(ActionCallback callback) throws AircraftMovementException, AircraftAssemblyException {
-        checkContraptionStatus();
-        if (getAircraftSpeed() == 0) {
-            throw new AircraftMovementException("speed_is_zero");
-        }
-        entity.turnRight(callback);
-    }
-
-    public void setAircraftSpeed(int speed) throws AircraftAssemblyException, AircraftMovementException {
-        checkContraptionStatus();
-        entity.setSpeed(speed);
-    }
-
-    public int getAircraftSpeed() throws AircraftAssemblyException {
-        checkContraptionStatus();
-        return entity.getSpeed();//generatedSpeed.getValue();
-    }
-
-    public Vec3 getAircraftPosition() throws AircraftAssemblyException {
-        checkContraptionStatus();
-        return entity.getAircraftPosition();
-    }
-
     public Vec3 getStationPosition() {
         return new Vec3(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
     }
 
-    public float getStorageUsage() throws AircraftAssemblyException {
-        checkContraptionStatus();
-
-        return entity.getStorageUsage();
-    }
-
-    public float getStorageSlotUsage() throws AircraftAssemblyException {
-        checkContraptionStatus();
-
-        return entity.getStorageSlotUsage();
-    }
-
-    public Optional<Pair<Vec3, Vec3>> search(EHarvestable target) throws AircraftAssemblyException {
-        checkContraptionStatus();
-
-        BlockPos center = entity.blockPosition();
-
-        LocalVariable<Pair<Vec3, Vec3>> ref = new LocalVariable<>();
-
-        ScanUtils.traverseBlocks(level, center, 8, (state, pos) -> {
-            if (target.test(state)) {
-                ref.set(ScanUtils.calcShapeForAdjacentBlocks(level, pos));
-                return false;
-            }
-            return true;
-        });
-
-        return Optional.ofNullable(ref.get());
-    }
-
-    public Direction getAircraftFacing() throws AircraftAssemblyException {
-        checkContraptionStatus();
-
-        return entity.getAircraftFacing();
-    }
-
     public Direction getStationFacing() {
         return getBlockState().getValue(HORIZONTAL_FACING);
-    }
-
-
-    public int calcRotationTo(Direction.Axis axis, int step) throws AircraftAssemblyException {
-        checkContraptionStatus();
-
-        int rotateStep = 0;
-
-        Direction facingDirection = getAircraftFacing();
-        Direction.AxisDirection axisDirection = facingDirection.getAxisDirection();
-        if (!axis.equals(facingDirection.getAxis())) {
-            rotateStep++;
-            axisDirection = Direction.fromYRot(facingDirection.toYRot() + 90).getAxisDirection();
-        }
-
-        if (axisDirection.getStep() != step) {
-            rotateStep += 2;
-        }
-
-        if (rotateStep > 2) {
-            rotateStep -= 4;
-        }
-
-        return rotateStep;
     }
 
     private void checkContraptionStatus() throws AircraftAssemblyException {
@@ -197,7 +92,7 @@ public class AircraftStationTileEntity extends KineticTileEntity {
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
         if(Peripherals.isPeripheral(cap)) {
-            return peripheral.cast();
+            return LazyOptional.of(() -> peripheral).cast();
         }
         return super.getCapability(cap, side);
     }
@@ -205,7 +100,7 @@ public class AircraftStationTileEntity extends KineticTileEntity {
     @Override
     public void setRemoved() {
         super.setRemoved();
-        peripheral.invalidate();
+        peripheral = null;
     }
 
     public void rebindAircraftEntity(AircraftEntity entity) {

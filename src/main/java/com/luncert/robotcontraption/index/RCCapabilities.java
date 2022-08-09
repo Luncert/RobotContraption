@@ -1,12 +1,12 @@
-package com.luncert.robotcontraption.common;
+package com.luncert.robotcontraption.index;
 
-import com.luncert.robotcontraption.content.aircraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import org.jetbrains.annotations.NotNull;
 
-public class Capabilities {
+public class RCCapabilities {
 
     public static final Capability<IAircraftComponent> CAPABILITY_AIRCRAFT_COMPONENT = CapabilityManager.get(new CapabilityToken<>() {
     });
@@ -15,6 +15,6 @@ public class Capabilities {
         return cap == CAPABILITY_AIRCRAFT_COMPONENT;
     }
 
-    private Capabilities() {
+    private RCCapabilities() {
     }
 }
