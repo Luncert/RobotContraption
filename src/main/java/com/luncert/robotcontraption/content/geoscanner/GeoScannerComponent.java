@@ -2,7 +2,7 @@ package com.luncert.robotcontraption.content.geoscanner;
 
 import com.google.common.collect.ImmutableMap;
 import com.luncert.robotcontraption.common.LocalVariable;
-import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
+import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.compat.computercraft.EHarvestable;
 import com.luncert.robotcontraption.util.ScanUtils;
 import dan200.computercraft.api.lua.LuaException;

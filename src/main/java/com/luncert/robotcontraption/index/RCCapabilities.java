@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.index;
 
-import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;

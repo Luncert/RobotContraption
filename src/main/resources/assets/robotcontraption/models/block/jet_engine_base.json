@@ -1,0 +1,22 @@
+{
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "robotcontraption:block/jet_engine_base",
+		"particle": "robotcontraption:block/jet_engine_base"
+	},
+	"elements": [
+		{
+			"from": [3, 3.5, 0],
+			"to": [13, 13.5, 2],
+			"faces": {
+				"north": {"uv": [0, 0, 5, 5], "texture": "#0"},
+				"east": {"uv": [5, 0, 6, 5], "texture": "#0"},
+				"south": {"uv": [0, 5, 5, 10], "texture": "#0"},
+				"west": {"uv": [5, 5, 6, 10], "texture": "#0"},
+				"up": {"uv": [11, 1, 6, 0], "texture": "#0"},
+				"down": {"uv": [11, 1, 6, 2], "texture": "#0"}
+			}
+		}
+	]
+}

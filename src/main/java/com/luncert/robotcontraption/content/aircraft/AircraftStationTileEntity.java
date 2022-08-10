@@ -1,8 +1,8 @@
 package com.luncert.robotcontraption.content.aircraft;
 
-import com.luncert.robotcontraption.compat.computercraft.AircraftAccessor;
+import com.luncert.robotcontraption.compat.aircraft.AircraftAccessor;
 import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
-import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;

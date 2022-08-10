@@ -11,6 +11,7 @@ import com.luncert.robotcontraption.content.fuelengine.FuelEngineInstance;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineRenderer;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineTileEntity;
 import com.luncert.robotcontraption.content.geoscanner.GeoScannerTileEntity;
+import com.luncert.robotcontraption.content.jetengine.JetEngineTileEntity;
 import com.luncert.robotcontraption.content.storageaccessor.StorageAccessorTileEntity;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpInstance;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpRenderer;
@@ -71,6 +72,12 @@ public class RCTileEntities {
             RobotContraption.registrate()
                     .tileEntity("block_reader", BlockReaderTileEntity::new)
                     .validBlocks(RCBlocks.BLOCK_READER)
+                    .register();
+
+    public static final BlockEntityEntry<JetEngineTileEntity> JET_ENGINE =
+            RobotContraption.registrate()
+                    .tileEntity("jet_engine", JetEngineTileEntity::new)
+                    .validBlocks(RCBlocks.JET_ENGINE)
                     .register();
 
     public static void register() {}

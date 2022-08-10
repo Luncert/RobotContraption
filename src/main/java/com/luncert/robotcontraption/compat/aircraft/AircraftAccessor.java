@@ -1,5 +1,6 @@
-package com.luncert.robotcontraption.compat.computercraft;
+package com.luncert.robotcontraption.compat.aircraft;
 
+import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.content.aircraft.AircraftEntity;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;

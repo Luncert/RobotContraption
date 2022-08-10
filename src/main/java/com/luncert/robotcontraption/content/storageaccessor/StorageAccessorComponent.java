@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.content.storageaccessor;
 
-import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
+import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;

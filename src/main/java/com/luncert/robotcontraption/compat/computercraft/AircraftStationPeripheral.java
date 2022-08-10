@@ -1,5 +1,6 @@
 package com.luncert.robotcontraption.compat.computercraft;
 
+import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;

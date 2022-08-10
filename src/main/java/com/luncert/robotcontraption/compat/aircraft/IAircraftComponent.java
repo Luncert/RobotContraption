@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.compat.computercraft;
+package com.luncert.robotcontraption.compat.aircraft;
 
 public interface IAircraftComponent {
 

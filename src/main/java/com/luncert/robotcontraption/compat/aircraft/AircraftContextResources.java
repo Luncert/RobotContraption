@@ -1,4 +1,4 @@
-package com.luncert.robotcontraption.compat.computercraft;
+package com.luncert.robotcontraption.compat.aircraft;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,6 +7,13 @@ import java.util.function.Function;
 public class AircraftContextResources {
 
     private final Map<String, Object> resourceMap = new HashMap<>();
+
+    /**
+     * Resource will be refreshed before each tick.
+     */
+    public <T> void updateResource(String name, T newValue) {
+        resourceMap.put(name, newValue);
+    }
 
     /**
      * Resource will be refreshed before each tick.

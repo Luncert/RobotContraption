@@ -2,7 +2,7 @@ package com.luncert.robotcontraption.content.aircraft;
 
 import com.luncert.robotcontraption.common.ActionCallback;
 import com.luncert.robotcontraption.common.Signal;
-import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.AircraftContraptionEntity;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
@@ -58,7 +58,6 @@ public class AircraftEntity extends Entity {
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
     private final Signal signal = new Signal();
     private int actionCoolDown; // see lerp
-    private boolean pauseMotion;
     public boolean isMoving;
 
     private int lerpSteps;
@@ -125,14 +124,6 @@ public class AircraftEntity extends Entity {
     }
 
     // action api
-
-    public void pauseMotion(String reason) {
-        if (isMoving) {
-            // pause motion and call lua callbacks
-            pauseMotion = true;
-            asyncCallbacks.remove().accept(reason);
-        }
-    }
 
     public void up(int n, ActionCallback callback) throws AircraftMovementException {
         checkSpeed();
@@ -271,8 +262,8 @@ public class AircraftEntity extends Entity {
         super.tick();
         tickLerp();
         tickCollide();
-        tickMotion();
         tickComponents();
+        tickMotion();
     }
 
     private void tickLerp() {
@@ -334,7 +325,7 @@ public class AircraftEntity extends Entity {
         }
 
         boolean isStalled = getContraptionEntity().map(AircraftContraptionEntity::isStalled).orElse(false);
-        if (isStalled || pauseMotion) {
+        if (isStalled) {
             return;
         }
 
@@ -415,8 +406,7 @@ public class AircraftEntity extends Entity {
         return speed / 512f * 1.5f;
     }
 
-    public void setSpeed(int speed) throws AircraftMovementException {
-        checkMotion();
+    public void setSpeed(int speed) {
         entityData.set(SPEED, Mth.clamp(Math.abs(speed), 0, 255));
     }
 

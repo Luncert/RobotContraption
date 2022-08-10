@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.compat.create;
 
-import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.index.RCBlocks;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
 import com.luncert.robotcontraption.index.RCCapabilities;

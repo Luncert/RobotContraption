@@ -1,6 +1,8 @@
 package com.luncert.robotcontraption.index;
 
 import com.luncert.robotcontraption.RobotContraption;
+import com.luncert.robotcontraption.compat.aircraft.BlockDefaults;
+import com.luncert.robotcontraption.content.jetengine.JetEngineBlock;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpMovementBehaviour;
 import com.luncert.robotcontraption.content.aircraftcontroller.AircraftControllerBlock;
 import com.luncert.robotcontraption.content.blockreader.BlockReaderBlock;
@@ -111,6 +113,15 @@ public class RCBlocks {
                     .initialProperties(SharedProperties::stone)
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .simpleItem()
+                    .register();
+
+    public static final BlockEntry<JetEngineBlock> JET_ENGINE =
+            REGISTRATE.block("jet_engine", JetEngineBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(BlockBehaviour.Properties::noOcclusion)
+                    .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .transform(BlockDefaults.setThrust(16))
                     .simpleItem()
                     .register();
 

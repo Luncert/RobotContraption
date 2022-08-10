@@ -1,9 +1,11 @@
 package com.luncert.robotcontraption.content.fuelengine;
 
-import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
+import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.util.Common;
 import com.mrh0.createaddition.index.CAFluids;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
+import dan200.computercraft.api.lua.LuaException;
+import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
@@ -13,8 +15,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 
 public class FuelEngineComponent extends BaseAircraftComponent {
 
-    // TODO
-    private int speed = 32;
+    private int powerLevel = 1;
 
     @Override
     public String getComponentType() {
@@ -24,12 +25,12 @@ public class FuelEngineComponent extends BaseAircraftComponent {
     @Override
     public void tickComponent() {
         final double newCapacity;
-        if (consumeFuel(true)) {
+        if (powerLevel > 0 && consumeFuel(true)) {
             consumeFuel(false);
             BlockState state = accessor.getComponentBlockState(name);
             Block block = state.getBlock();
             Double defaultCapacity = BlockStressDefaults.DEFAULT_CAPACITIES.get(block.getRegistryName());
-            newCapacity = defaultCapacity * speed;
+            newCapacity = defaultCapacity * powerLevel;
         } else {
             newCapacity = 0;
         }
@@ -58,6 +59,14 @@ public class FuelEngineComponent extends BaseAircraftComponent {
         } else {
             consumptionFactor = 2;
         }
-        return consumptionFactor;
+        return consumptionFactor * powerLevel;
+    }
+
+    @LuaFunction
+    public void setPowerLevel(int powerLevel) throws LuaException {
+        if (powerLevel < 0 || powerLevel > 4) {
+            throw new LuaException("invalid power level");
+        }
+        this.powerLevel = powerLevel;
     }
 }

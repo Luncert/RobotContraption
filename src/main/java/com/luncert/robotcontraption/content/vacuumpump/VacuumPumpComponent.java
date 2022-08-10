@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.content.vacuumpump;
 
-import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
+import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.level.block.state.BlockState;
 

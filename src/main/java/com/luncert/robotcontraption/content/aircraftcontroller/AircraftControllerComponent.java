@@ -2,13 +2,13 @@ package com.luncert.robotcontraption.content.aircraftcontroller;
 
 import com.google.common.collect.ImmutableMap;
 import com.luncert.robotcontraption.compat.computercraft.AircraftApiCallback;
-import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
-import com.luncert.robotcontraption.content.fuelengine.FuelEngineComponent;
+import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.lua.MethodResult;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Arrays;
@@ -22,10 +22,9 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
 
     @Override
     public void tickComponent() {
-        // TODO find jet engine and check whether they are working, if not pause aircraft motion
-        // for (FuelEngineComponent fuelEngine : accessor.<FuelEngineComponent>findAll("FuelEngine")) {
-        // }
-        accessor.aircraft.pauseMotion("out of fuel");
+        double thrust = accessor.resources.getResource("thrust", 0d);
+        int speed = (int) Mth.clamp(thrust / accessor.contraption.getBlocks().size(), 0, 1) * 256;
+        accessor.aircraft.setSpeed(speed);
     }
 
     @Override
@@ -104,15 +103,7 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
-    @LuaFunction(mainThread = true)
-    public final void setSpeed(int speed) throws LuaException {
-        try {
-            accessor.aircraft.setSpeed(speed);
-        } catch (AircraftMovementException e) {
-            throw new LuaException(e.getMessage());
-        }
-    }
-
+    // TODO return n ticks / 1 block
     @LuaFunction(mainThread = true)
     public final int getSpeed() throws LuaException {
         return accessor.aircraft.getSpeed();
