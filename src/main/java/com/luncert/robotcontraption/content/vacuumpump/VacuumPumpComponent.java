@@ -1,17 +1,10 @@
 package com.luncert.robotcontraption.content.vacuumpump;
 
-import com.luncert.robotcontraption.compat.computercraft.AircraftAccessor;
-import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
 import dan200.computercraft.api.lua.LuaFunction;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class VacuumPumpComponent implements IAircraftComponent {
-
-    private AircraftAccessor accessor;
-
-    @Override
-    public void init(AircraftAccessor aircraftAccessor, String name) {
-        this.accessor = aircraftAccessor;
-    }
+public class VacuumPumpComponent extends BaseAircraftComponent {
 
     @Override
     public String getComponentType() {
@@ -20,11 +13,13 @@ public class VacuumPumpComponent implements IAircraftComponent {
 
     @LuaFunction
     public void enableDraining() {
-        // TODO
+        BlockState blockState = accessor.getComponentBlockState(name);
+        blockState.setValue(VacuumPumpBlock.ENABLE_FILLING, false);
     }
 
     @LuaFunction
     public void enableFilling() {
-
+        BlockState blockState = accessor.getComponentBlockState(name);
+        blockState.setValue(VacuumPumpBlock.ENABLE_FILLING, true);
     }
 }

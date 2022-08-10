@@ -1,9 +1,8 @@
 package com.luncert.robotcontraption.content.aircraftcontroller;
 
 import com.google.common.collect.ImmutableMap;
-import com.luncert.robotcontraption.compat.computercraft.AircraftAccessor;
 import com.luncert.robotcontraption.compat.computercraft.AircraftApiCallback;
-import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.content.fuelengine.FuelEngineComponent;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import dan200.computercraft.api.lua.LuaException;
@@ -13,19 +12,20 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static com.luncert.robotcontraption.compat.computercraft.AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE;
 
-public class AircraftControllerComponent implements IAircraftComponent {
+public class AircraftControllerComponent extends BaseAircraftComponent {
 
-    private AircraftAccessor accessor;
     private int executionId;
 
     @Override
-    public void init(AircraftAccessor aircraftAccessor, String name) {
-        accessor = aircraftAccessor;
+    public void tickComponent() {
+        // TODO find jet engine and check whether they are working, if not pause aircraft motion
+        // for (FuelEngineComponent fuelEngine : accessor.<FuelEngineComponent>findAll("FuelEngine")) {
+        // }
+        accessor.aircraft.pauseMotion("out of fuel");
     }
 
     @Override
@@ -35,10 +35,6 @@ public class AircraftControllerComponent implements IAircraftComponent {
 
     @LuaFunction
     public final MethodResult up(int n) throws LuaException {
-        if (!isFuelEnough(n)) {
-            return MethodResult.of(false);
-        }
-
         if (n <= 0) {
             throw new LuaException("n must be positive");
         }
@@ -55,10 +51,6 @@ public class AircraftControllerComponent implements IAircraftComponent {
 
     @LuaFunction
     public final MethodResult down(int n) throws LuaException {
-        if (!isFuelEnough(n)) {
-            return MethodResult.of(false);
-        }
-
         if (n <= 0) {
             throw new LuaException("n must be positive");
         }
@@ -75,10 +67,6 @@ public class AircraftControllerComponent implements IAircraftComponent {
 
     @LuaFunction
     public final MethodResult forward(int n) throws LuaException {
-        if (!isFuelEnough(n)) {
-            return MethodResult.of(false);
-        }
-
         if (n <= 0) {
             throw new LuaException("n must be positive");
         }
@@ -95,10 +83,6 @@ public class AircraftControllerComponent implements IAircraftComponent {
 
     @LuaFunction
     public final MethodResult turnLeft() throws LuaException {
-        if (!isFuelEnough(1)) {
-            return MethodResult.of(false);
-        }
-
         int executionId = this.executionId++;
         try {
             accessor.aircraft.turnLeft(data -> accessor.queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
@@ -111,10 +95,6 @@ public class AircraftControllerComponent implements IAircraftComponent {
 
     @LuaFunction
     public final MethodResult turnRight() throws LuaException {
-        if (!isFuelEnough(1)) {
-            return MethodResult.of(false);
-        }
-
         int executionId = this.executionId++;
         try {
             accessor.aircraft.turnRight(data -> accessor.queueEvent(EVENT_AIRCRAFT_MOVEMENT_DONE, executionId, data));
@@ -122,32 +102,6 @@ public class AircraftControllerComponent implements IAircraftComponent {
             throw new LuaException(e.getMessage());
         }
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
-    }
-
-    private boolean isFuelEnough(int n) {
-        boolean isFuelEnough = true;
-        for (FuelEngineComponent fuelEngine : accessor.<FuelEngineComponent>findAll("FuelEngine")) {
-            isFuelEnough &= fuelEngine.consumeFuel(n, true);
-        }
-
-        if (isFuelEnough) {
-            for (FuelEngineComponent fuelEngine : accessor.<FuelEngineComponent>findAll("FuelEngine")) {
-                fuelEngine.consumeFuel(n, false);
-            }
-            return true;
-        }
-
-        return false;
-    }
-
-    @LuaFunction
-    public int getAvailableMovingDistance() {
-        List<FuelEngineComponent> fuelEngine = accessor.findAll("FuelEngine");
-        if (fuelEngine.isEmpty()) {
-            return 0;
-        }
-
-        return fuelEngine.get(0).getAvailableMovingDistance() / fuelEngine.size();
     }
 
     @LuaFunction(mainThread = true)

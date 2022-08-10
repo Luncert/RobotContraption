@@ -1,8 +1,7 @@
 package com.luncert.robotcontraption.content.blockreader;
 
 import com.google.common.collect.ImmutableMap;
-import com.luncert.robotcontraption.compat.computercraft.AircraftAccessor;
-import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.util.LuaConverter;
 import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.core.BlockPos;
@@ -13,16 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Map;
 
-public class BlockReaderComponent implements IAircraftComponent {
-
-    private AircraftAccessor accessor;
-    private String name;
-
-    @Override
-    public void init(AircraftAccessor aircraftAccessor, String name) {
-        accessor = aircraftAccessor;
-        this.name = name;
-    }
+public class BlockReaderComponent extends BaseAircraftComponent {
 
     @Override
     public String getComponentType() {

@@ -58,6 +58,7 @@ public class AircraftEntity extends Entity {
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
     private final Signal signal = new Signal();
     private int actionCoolDown; // see lerp
+    private boolean pauseMotion;
     public boolean isMoving;
 
     private int lerpSteps;
@@ -124,6 +125,14 @@ public class AircraftEntity extends Entity {
     }
 
     // action api
+
+    public void pauseMotion(String reason) {
+        if (isMoving) {
+            // pause motion and call lua callbacks
+            pauseMotion = true;
+            asyncCallbacks.remove().accept(reason);
+        }
+    }
 
     public void up(int n, ActionCallback callback) throws AircraftMovementException {
         checkSpeed();
@@ -325,13 +334,14 @@ public class AircraftEntity extends Entity {
         }
 
         boolean isStalled = getContraptionEntity().map(AircraftContraptionEntity::isStalled).orElse(false);
-
-        if (!isStalled) {
-            updateMotion().ifPresent(motion -> {
-                setDeltaMovement(motion);
-                setPos(getX() + motion.x, getY() + motion.y, getZ() + motion.z);
-            });
+        if (isStalled || pauseMotion) {
+            return;
         }
+
+        updateMotion().ifPresent(motion -> {
+            setDeltaMovement(motion);
+            setPos(getX() + motion.x, getY() + motion.y, getZ() + motion.z);
+        });
     }
 
     private void tickComponents() {

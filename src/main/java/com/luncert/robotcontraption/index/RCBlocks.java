@@ -1,7 +1,7 @@
 package com.luncert.robotcontraption.index;
 
 import com.luncert.robotcontraption.RobotContraption;
-import com.luncert.robotcontraption.compat.create.actor.VacuumPumpMovementBehaviour;
+import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpMovementBehaviour;
 import com.luncert.robotcontraption.content.aircraftcontroller.AircraftControllerBlock;
 import com.luncert.robotcontraption.content.blockreader.BlockReaderBlock;
 import com.luncert.robotcontraption.content.depothopper.DepotHopperBlock;

@@ -1,19 +1,11 @@
 package com.luncert.robotcontraption.content.storageaccessor;
 
-import com.luncert.robotcontraption.compat.computercraft.AircraftAccessor;
-import com.luncert.robotcontraption.compat.computercraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.computercraft.BaseAircraftComponent;
 import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
-public class StorageAccessorComponent implements IAircraftComponent {
-
-    private AircraftAccessor accessor;
-
-    @Override
-    public void init(AircraftAccessor aircraftAccessor, String name) {
-        accessor = aircraftAccessor;
-    }
+public class StorageAccessorComponent extends BaseAircraftComponent {
 
     @Override
     public String getComponentType() {

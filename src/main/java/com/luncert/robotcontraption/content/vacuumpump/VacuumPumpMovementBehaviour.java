@@ -1,10 +1,7 @@
-package com.luncert.robotcontraption.compat.create.actor;
+package com.luncert.robotcontraption.content.vacuumpump;
 
 import com.jozufozu.flywheel.api.MaterialManager;
 import com.jozufozu.flywheel.core.virtual.VirtualRenderWorld;
-import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpActorInstance;
-import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpBlock;
-import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpRenderer;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementBehaviour;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
 import com.simibubi.create.content.contraptions.components.structureMovement.render.ActorInstance;
@@ -48,7 +45,12 @@ public class VacuumPumpMovementBehaviour implements MovementBehaviour {
     public void visitNewPosition(MovementContext context, BlockPos pos) {
         MovementBehaviour.super.visitNewPosition(context, pos);
 
-        drain(context, pos);
+        Boolean filling = context.state.getValue(VacuumPumpBlock.ENABLE_FILLING);
+        if (filling) {
+            fill(context, pos);
+        } else {
+            drain(context, pos);
+        }
     }
 
     @Override
@@ -68,6 +70,10 @@ public class VacuumPumpMovementBehaviour implements MovementBehaviour {
     @Override
     public boolean hasSpecialInstancedRendering() {
         return true;
+    }
+
+    private void fill(MovementContext context, BlockPos pos) {
+        // TODO
     }
 
     private void drain(MovementContext context, BlockPos pos) {

@@ -10,8 +10,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -23,8 +26,17 @@ public class VacuumPumpBlock extends DirectionalAxisKineticBlock implements ITE<
             .shape(2, 0, 2, 14, 12, 14)
             .forDirectional();
 
+    public static final BooleanProperty ENABLE_FILLING = BooleanProperty.create("enable_filling");
+
     public VacuumPumpBlock(Properties p_49795_) {
         super(p_49795_);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(ENABLE_FILLING);
+        super.createBlockStateDefinition(builder);
+
     }
 
     @Nullable

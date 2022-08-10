@@ -23,6 +23,7 @@ public final class AircraftAccessor {
     public final AircraftStationTileEntity station;
     public final AircraftEntity aircraft;
     public final AircraftContraption contraption;
+    public final AircraftContextResources resources = new AircraftContextResources();
 
     public AircraftAccessor(Level world,
                             AircraftStationPeripheral peripheral,
