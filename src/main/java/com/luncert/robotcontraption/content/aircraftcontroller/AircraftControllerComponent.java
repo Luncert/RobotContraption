@@ -103,14 +103,13 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
-    // TODO return n ticks / 1 block
     @LuaFunction(mainThread = true)
-    public final int getSpeed() throws LuaException {
-        return accessor.aircraft.getSpeed();
+    public final int getSpeed() {
+        return (int) (1d / accessor.aircraft.getSpeed());
     }
 
     @LuaFunction
-    public final Map<String, Double> getAircraftPosition() throws LuaException {
+    public final Map<String, Double> getAircraftPosition() {
         Vec3 pos = accessor.aircraft.getAircraftPosition();
         return ImmutableMap.of(
                 "x", pos.x,
@@ -120,7 +119,7 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
     }
 
     @LuaFunction
-    public final Map<String, Double> getStationPosition() throws LuaException {
+    public final Map<String, Double> getStationPosition() {
         Vec3 pos = accessor.station.getStationPosition();
         return ImmutableMap.of(
                 "x", pos.x,
@@ -130,7 +129,7 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
     }
 
     @LuaFunction
-    public final Map<String, Object> getAircraftFacing() throws LuaException {
+    public final Map<String, Object> getAircraftFacing() {
         Direction direction = accessor.aircraft.getAircraftFacing();
         Direction.AxisDirection axisDirection = direction.getAxisDirection();
         return ImmutableMap.of(
@@ -140,7 +139,7 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
     }
 
     @LuaFunction
-    public final Map<String, Object> getStationFacing() throws LuaException {
+    public final Map<String, Object> getStationFacing() {
         Direction direction = accessor.station.getStationFacing();
         Direction.AxisDirection axisDirection = direction.getAxisDirection();
         return ImmutableMap.of(

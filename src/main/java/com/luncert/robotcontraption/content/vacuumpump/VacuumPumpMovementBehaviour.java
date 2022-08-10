@@ -107,7 +107,6 @@ public class VacuumPumpMovementBehaviour implements MovementBehaviour {
             IFluidHandler sharedFluidTanks = context.contraption.getSharedFluidTanks();
             sharedFluidTanks.fill(fluidStack, IFluidHandler.FluidAction.EXECUTE); // TODO return value?
 
-
             playEffect(world, pos, fluid, true);
             world.setBlock(pos, emptied, 2 | 16);
         }
