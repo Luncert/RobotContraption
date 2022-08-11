@@ -1,6 +1,8 @@
 package com.luncert.robotcontraption.content.fuelengine;
 
+import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
+import com.luncert.robotcontraption.content.blockreader.BlockReaderComponent;
 import com.luncert.robotcontraption.util.Common;
 import com.mrh0.createaddition.index.CAFluids;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
@@ -13,13 +15,15 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 
+import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType.FUEL_ENGINE;
+
 public class FuelEngineComponent extends BaseAircraftComponent {
 
     private int powerLevel = 1;
 
     @Override
-    public String getComponentType() {
-        return "FuelEngine";
+    public AircraftComponentType getComponentType() {
+        return FUEL_ENGINE;
     }
 
     @Override

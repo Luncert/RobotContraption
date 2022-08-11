@@ -26,7 +26,7 @@ public class MovementContextMixin {
         if (!world.isClientSide && contraption instanceof AircraftContraption) {
             AircraftEntity entity = (AircraftEntity) contraption.entity.getVehicle();
             if (entity != null) {
-                cir.setReturnValue(entity.getSpeed() * 4f);
+                cir.setReturnValue(entity.getKineticSpeed() * 4f);
                 cir.cancel();
             }
         }

@@ -92,7 +92,7 @@ public class AircraftStationPeripheral implements IPeripheral {
         for (List<IAircraftComponent> value : components.values()) {
             for (int i = 0; i < value.size(); i++) {
                 IAircraftComponent c = value.get(i);
-                result.add(c.getComponentType() + "-" + i);
+                result.add(c.getComponentType().getName() + "-" + i);
             }
         }
         return result;

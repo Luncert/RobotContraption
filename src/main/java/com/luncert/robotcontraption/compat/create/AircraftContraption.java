@@ -1,6 +1,10 @@
 package com.luncert.robotcontraption.compat.create;
 
+import com.luncert.robotcontraption.compat.aircraft.AircraftAccessor;
+import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
+import com.luncert.robotcontraption.content.aircraft.AircraftEntity;
+import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
 import com.luncert.robotcontraption.index.RCBlocks;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
 import com.luncert.robotcontraption.index.RCCapabilities;
@@ -13,6 +17,8 @@ import com.simibubi.create.foundation.utility.NBTHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -96,12 +102,12 @@ public class AircraftContraption extends Contraption {
     private void captureAircraftComponent(Pair<StructureBlockInfo, BlockEntity> entry) {
         LazyOptional<IAircraftComponent> opt = entry.getValue().getCapability(RCCapabilities.CAPABILITY_AIRCRAFT_COMPONENT);
         opt.ifPresent(c ->
-                components.compute(c.getComponentType(), (k, v) -> {
+                components.compute(c.getComponentType().getName(), (k, v) -> {
                    if (v == null) {
                        v = new LinkedList<>();
                    }
 
-                   componentBlockInfoMap.put(c.getComponentType() + "-" + v.size(), entry.getKey());
+                   componentBlockInfoMap.put(c.getComponentType().getName() + "-" + v.size(), entry.getKey());
 
                    v.add(c);
                    return v;
@@ -118,14 +124,94 @@ public class AircraftContraption extends Contraption {
     @Override
     public CompoundTag writeNBT(boolean spawnPacket) {
         CompoundTag tag = super.writeNBT(spawnPacket);
+
         NBTHelper.writeEnum(tag, "RotationMode", rotationMode);
+
+        ListTag componentList = new ListTag();
+        for (Map.Entry<String, List<IAircraftComponent>> entry : components.entrySet()) {
+            List<IAircraftComponent> components = entry.getValue();
+            for (int i = 0; i < components.size(); i++) {
+                CompoundTag item = new CompoundTag();
+                item.putString("name", entry.getKey() + "-" + i);
+
+                IAircraftComponent component = components.get(i);
+                CompoundTag c = component.writeNBT();
+                if (c != null) {
+                    item.put("component", c);
+                }
+
+                componentList.add(item);
+            }
+        }
+
+        ListTag componentInfoList = new ListTag();
+        for (Map.Entry<String, StructureBlockInfo> entry : componentBlockInfoMap.entrySet()) {
+            CompoundTag item = new CompoundTag();
+            item.putString("name", entry.getKey());
+            item.putLong("pos", entry.getValue().pos.asLong());
+            componentInfoList.add(item);
+        }
+
+        tag.put("components", componentList);
+        tag.put("componentInfoMappings", componentInfoList);
+
+        if (entity.getVehicle() instanceof AircraftEntity entity) {
+            BlockPos stationPosition = entity.getStationPosition();
+            CompoundTag stationPos = new CompoundTag();
+            stationPos.putInt("x", stationPosition.getX());
+            stationPos.putInt("y", stationPosition.getY());
+            stationPos.putInt("z", stationPosition.getZ());
+            tag.put("stationPosition", stationPos);
+        }
         return tag;
     }
 
     @Override
     public void readNBT(Level world, CompoundTag nbt, boolean spawnData) {
-        rotationMode = NBTHelper.readEnum(nbt, "RotationMode", EAircraftMovementMode.class);
         super.readNBT(world, nbt, spawnData);
+
+        rotationMode = NBTHelper.readEnum(nbt, "RotationMode", EAircraftMovementMode.class);
+
+        this.components.clear();
+        ListTag componentList = nbt.getList("components", 10);
+        for (Tag tag : componentList) {
+            CompoundTag componentNbt = (CompoundTag) tag;
+            String componentName = componentNbt.getString("name");
+            int i = componentName.lastIndexOf('-');
+            String componentType = componentName.substring(0, i);
+            int componentId = Integer.parseInt(componentName.substring(i + 1));
+            this.components.compute(componentType, (k, v) -> {
+                if (v == null) {
+                    v = new ArrayList<>();
+                }
+                for (int n = v.size(); n <= componentId; n++) {
+                    v.add(null);
+                }
+                IAircraftComponent component = AircraftComponentType.createComponent(componentType);
+                component.readNBT(world, componentNbt);
+
+                v.set(componentId, component);
+                return v;
+            });
+        }
+
+        this.componentBlockInfoMap.clear();
+        ListTag componentInfoList = nbt.getList("componentInfoMappings", 10);
+        for (Tag tag : componentInfoList) {
+            CompoundTag componentNbt = (CompoundTag) tag;
+            String name = componentNbt.getString("name");
+            long blockPos = componentNbt.getLong("pos");
+            this.componentBlockInfoMap.put(name, blocks.get(BlockPos.of(blockPos)));
+        }
+
+        CompoundTag stationPos = nbt.getCompound("stationPosition");
+        BlockPos stationPosition = new BlockPos(
+                stationPos.getInt("x"),
+                stationPos.getInt("y"),
+                stationPos.getInt("z"));
+        if (world.getBlockEntity(stationPosition) instanceof AircraftStationTileEntity te) {
+            te.initComponents();
+        }
     }
 
     @Override
@@ -133,12 +219,10 @@ public class AircraftContraption extends Contraption {
         return RCBlocks.AIRCRAFT_ANCHOR.has(state);
     }
 
-
     @Override
     protected boolean customBlockRemoval(LevelAccessor world, BlockPos pos, BlockState state) {
         return RCBlocks.AIRCRAFT_ANCHOR.has(state);
     }
-
 
     @Override
     public boolean canBeStabilized(Direction facing, BlockPos localPos) {

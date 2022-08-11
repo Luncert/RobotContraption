@@ -1,11 +1,14 @@
 package com.luncert.robotcontraption.content.fuelengine;
 
 import com.jozufozu.flywheel.backend.Backend;
+import com.jozufozu.flywheel.core.virtual.VirtualRenderWorld;
 import com.luncert.robotcontraption.index.RCBlockPartials;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.base.KineticTileEntityRenderer;
+import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
+import com.simibubi.create.content.contraptions.components.structureMovement.render.ContraptionMatrices;
 import com.simibubi.create.foundation.render.CachedBufferer;
 import com.simibubi.create.foundation.render.SuperByteBuffer;
 import com.simibubi.create.foundation.utility.AnimationTickHolder;
@@ -50,5 +53,10 @@ public class FuelEngineRenderer extends KineticTileEntityRenderer {
 
         standardKineticRotationTransform(shaftHalf, te, lightBehind).renderInto(ms, vb);
         kineticRotationTransform(fanInner, te, direction.getAxis(), angle, lightInFront).renderInto(ms, vb);
+    }
+
+    public static void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld,
+                                           ContraptionMatrices matrices, MultiBufferSource buffer) {
+
     }
 }

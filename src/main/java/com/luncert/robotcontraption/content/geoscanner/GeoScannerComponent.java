@@ -2,8 +2,10 @@ package com.luncert.robotcontraption.content.geoscanner;
 
 import com.google.common.collect.ImmutableMap;
 import com.luncert.robotcontraption.common.LocalVariable;
+import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.compat.computercraft.EHarvestable;
+import com.luncert.robotcontraption.content.fuelengine.FuelEngineComponent;
 import com.luncert.robotcontraption.util.ScanUtils;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
@@ -14,11 +16,12 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 
-public class GeoScannerComponent extends BaseAircraftComponent {
+import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType.GEO_SCANNER;
 
+public class GeoScannerComponent extends BaseAircraftComponent {
     @Override
-    public String getComponentType() {
-        return "GeoScanner";
+    public AircraftComponentType getComponentType() {
+        return GEO_SCANNER;
     }
 
     @LuaFunction(mainThread = true)

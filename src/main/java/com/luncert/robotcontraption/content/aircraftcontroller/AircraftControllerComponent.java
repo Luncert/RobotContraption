@@ -1,6 +1,7 @@
 package com.luncert.robotcontraption.content.aircraftcontroller;
 
 import com.google.common.collect.ImmutableMap;
+import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.computercraft.AircraftApiCallback;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
@@ -14,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.Arrays;
 import java.util.Map;
 
+import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType.AIRCRAFT_CONTROLLER;
 import static com.luncert.robotcontraption.compat.computercraft.AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE;
 
 public class AircraftControllerComponent extends BaseAircraftComponent {
@@ -23,13 +25,13 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
     @Override
     public void tickComponent() {
         double thrust = accessor.resources.getResource("thrust", 0d);
-        int speed = (int) Mth.clamp(thrust / accessor.contraption.getBlocks().size(), 0, 1) * 256;
-        accessor.aircraft.setSpeed(speed);
+        int speed = (int) (Mth.clamp(thrust / accessor.contraption.getBlocks().size(), 0, 1) * 256);
+        accessor.aircraft.setKineticSpeed(speed);
     }
 
     @Override
-    public String getComponentType() {
-        return "AircraftController";
+    public AircraftComponentType getComponentType() {
+        return AIRCRAFT_CONTROLLER;
     }
 
     @LuaFunction
@@ -105,7 +107,7 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
 
     @LuaFunction(mainThread = true)
     public final int getSpeed() {
-        return (int) (1d / accessor.aircraft.getSpeed());
+        return (int) (1d / accessor.aircraft.getMovementSpeed());
     }
 
     @LuaFunction

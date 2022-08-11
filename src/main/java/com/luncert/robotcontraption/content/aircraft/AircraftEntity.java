@@ -94,6 +94,10 @@ public class AircraftEntity extends Entity {
         return entityBuilder.sized(0.1f, 0.1f);
     }
 
+    public BlockPos getStationPosition() {
+        return stationPosition;
+    }
+
     public boolean assemble(BlockPos pos, EAircraftMovementMode mode) throws AircraftAssemblyException {
         AircraftContraption contraption = new AircraftContraption(mode);
         try {
@@ -149,6 +153,7 @@ public class AircraftEntity extends Entity {
         checkSpeed();
         checkMotion();
         checkSignal();
+        System.out.println("?????");
         moveForward(n, callback);
     }
 
@@ -196,7 +201,7 @@ public class AircraftEntity extends Entity {
     }
 
     private void checkSpeed() throws AircraftMovementException {
-        if (getSpeed() == 0) {
+        if (getKineticSpeed() == 0) {
             throw new AircraftMovementException("speed_is_zero");
         }
     }
@@ -398,19 +403,19 @@ public class AircraftEntity extends Entity {
         isMoving = false;
     }
 
-    private float getMovementSpeed() {
-        return getSpeed() / 512f * 1.5f;
+    public float getMovementSpeed() {
+        return getKineticSpeed() / 512f * 1.5f;
     }
 
     private float getMovementSpeed(int speed) {
         return speed / 512f * 1.5f;
     }
 
-    public void setSpeed(int speed) {
+    public void setKineticSpeed(int speed) {
         entityData.set(SPEED, Mth.clamp(Math.abs(speed), 0, 255));
     }
 
-    public int getSpeed() {
+    public int getKineticSpeed() {
         return entityData.get(SPEED);
     }
 
@@ -469,7 +474,7 @@ public class AircraftEntity extends Entity {
 
     @Override
     protected void addAdditionalSaveData(CompoundTag root) {
-        root.putInt("speed", getSpeed());
+        root.putInt("speed", getKineticSpeed());
         root.putFloat("targetYRot", getTargetYRot());
 
         Optional<AircraftMovement> opt = getTargetMovement();

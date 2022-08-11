@@ -56,13 +56,16 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         }
         this.entity = aircraft;
 
-        // init components
+        initComponents();
+    }
+
+    public void initComponents() {
         AircraftAccessor accessor = new AircraftAccessor(level, peripheral, this, entity, entity.getContraption().orElseThrow());
         for (Map.Entry<String, List<IAircraftComponent>> entry : getComponents().entrySet()) {
             List<IAircraftComponent> components = entry.getValue();
             for (int i = 0; i < components.size(); i++) {
                 IAircraftComponent c = components.get(i);
-                String name = c.getComponentType() + "-" + i;
+                String name = c.getComponentType().getName() + "-" + i;
                 c.init(accessor, name);
             }
         }

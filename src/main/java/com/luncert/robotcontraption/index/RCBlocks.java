@@ -2,6 +2,7 @@ package com.luncert.robotcontraption.index;
 
 import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.aircraft.BlockDefaults;
+import com.luncert.robotcontraption.content.fuelengine.FuelEngineMovementBehaviour;
 import com.luncert.robotcontraption.content.jetengine.JetEngineBlock;
 import com.luncert.robotcontraption.content.vacuumpump.VacuumPumpMovementBehaviour;
 import com.luncert.robotcontraption.content.aircraftcontroller.AircraftControllerBlock;
@@ -69,6 +70,7 @@ public class RCBlocks {
                     .addLayer(() -> RenderType::translucent)
                     .transform(BlockStressDefaults.setCapacity(64d))
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .onRegister(AllMovementBehaviours.movementBehaviour(new FuelEngineMovementBehaviour()))
                     .item()
                     .transform(customItemModel())
                     .register();

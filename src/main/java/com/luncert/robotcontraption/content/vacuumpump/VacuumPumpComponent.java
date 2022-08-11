@@ -1,14 +1,17 @@
 package com.luncert.robotcontraption.content.vacuumpump;
 
+import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.level.block.state.BlockState;
 
+import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType.VACUUM_PUMP;
+
 public class VacuumPumpComponent extends BaseAircraftComponent {
 
     @Override
-    public String getComponentType() {
-        return "VacuumPump";
+    public AircraftComponentType getComponentType() {
+        return VACUUM_PUMP;
     }
 
     @LuaFunction

@@ -1,21 +1,26 @@
 package com.luncert.robotcontraption.content.jetengine;
 
+import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.compat.aircraft.BlockDefaults;
+import com.luncert.robotcontraption.content.geoscanner.GeoScannerComponent;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
+import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType.JET_ENGINE;
+
 public class JetEngineComponent extends BaseAircraftComponent {
+
 
     private boolean active;
     private int powerLevel = 1;
 
     @Override
-    public String getComponentType() {
-        return "JetEngine";
+    public AircraftComponentType getComponentType() {
+        return JET_ENGINE;
     }
 
     @Override

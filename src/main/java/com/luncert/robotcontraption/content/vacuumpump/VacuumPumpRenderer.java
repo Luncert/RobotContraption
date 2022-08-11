@@ -80,13 +80,7 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
         BlockState blockState = context.state;
         Direction direction = blockState.getValue(FACING);
 
-        Vec3 center = VecHelper.getCenterOf(new BlockPos(context.position));
-        double distance = context.position.distanceTo(center);
-        double nextDistance = context.position.add(context.motion)
-                .distanceTo(center);
-        double factor = .5f - Mth.clamp(Mth.lerp(AnimationTickHolder.getPartialTicks(), distance, nextDistance), 0, 1);
-        Vec3 baseOffset = Vec3.atLowerCornerOf(blockState.getValue(DirectionalKineticBlock.FACING)
-                .getNormal()).scale(factor);
+        Vec3 baseOffset = Common.convert(context.localPos);
 
         float speed = context.getAnimationSpeed();
         if (context.contraption.stalled)

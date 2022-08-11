@@ -56,12 +56,7 @@ public class VacuumPumpActorInstance extends ActorInstance {
     }
 
     private Vec3 getInstancePosition() {
-        Vec3 center = VecHelper.getCenterOf(new BlockPos(context.position));
-        double distance = context.position.distanceTo(center);
-        double nextDistance = context.position.add(context.motion)
-                .distanceTo(center);
-        double factor = .5f - Mth.clamp(Mth.lerp(AnimationTickHolder.getPartialTicks(), distance, nextDistance), 0, 1);
-        return Vec3.atLowerCornerOf(direction.getNormal()).scale(factor);
+        return Common.convert(context.localPos);
     }
 
     private void animeCogwheel() {
