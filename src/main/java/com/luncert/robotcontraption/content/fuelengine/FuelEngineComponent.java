@@ -8,6 +8,11 @@ import com.mrh0.createaddition.index.CAFluids;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
@@ -72,5 +77,15 @@ public class FuelEngineComponent extends BaseAircraftComponent {
             throw new LuaException("invalid power level");
         }
         this.powerLevel = powerLevel;
+    }
+
+    @Override
+    public Tag writeNBT() {
+        return IntTag.valueOf(powerLevel);
+    }
+
+    @Override
+    public void readNBT(Level world, Tag tag) {
+        powerLevel = ((IntTag) tag).getAsInt();
     }
 }

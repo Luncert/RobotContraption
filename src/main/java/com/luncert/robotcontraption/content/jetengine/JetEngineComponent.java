@@ -3,10 +3,12 @@ package com.luncert.robotcontraption.content.jetengine;
 import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.compat.aircraft.BlockDefaults;
-import com.luncert.robotcontraption.content.geoscanner.GeoScannerComponent;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -15,7 +17,6 @@ import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType
 public class JetEngineComponent extends BaseAircraftComponent {
 
 
-    private boolean active;
     private int powerLevel = 1;
 
     @Override
@@ -33,21 +34,13 @@ public class JetEngineComponent extends BaseAircraftComponent {
             double requiredCapacity = impact * powerLevel * powerLevel;
 
             if (requiredCapacity <= capacity) {
-                active = true;
                 // consume capacity
                 accessor.resources.updateResource("capacity", capacity - requiredCapacity);
                 // generate thrust
                 double thrust = powerLevel * BlockDefaults.DEFAULT_TRUSTS.get(block.getRegistryName());
                 accessor.resources.updateResource("thrust", 0d, old -> old + thrust);
-                return;
             }
         }
-
-        active = false;
-    }
-
-    public boolean isActive() {
-        return active;
     }
 
     @LuaFunction
@@ -56,5 +49,15 @@ public class JetEngineComponent extends BaseAircraftComponent {
             throw new LuaException("invalid power level");
         }
         this.powerLevel = powerLevel;
+    }
+
+    @Override
+    public Tag writeNBT() {
+        return IntTag.valueOf(powerLevel);
+    }
+
+    @Override
+    public void readNBT(Level world, Tag tag) {
+        powerLevel = ((IntTag) tag).getAsInt();
     }
 }

@@ -1,6 +1,7 @@
 package com.luncert.robotcontraption.compat.computercraft;
 
 import com.luncert.robotcontraption.RobotContraption;
+import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
@@ -9,10 +10,10 @@ import com.luncert.robotcontraption.util.Common;
 import dan200.computercraft.api.lua.*;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -102,20 +103,12 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public Map<String, ILuaFunction> getComponent(String name) throws LuaException {
-        String componentType;
-        int componentId;
-        try {
-            String[] split = name.split("-");
-            componentType = split[0];
-            componentId = Integer.parseInt(split[1]);
-        } catch (Exception e) {
-            throw new LuaException("invalid component name");
-        }
+    public Map<String, ILuaFunction> getComponent(String componentName) throws LuaException {
+        Pair<String, Integer> name = BaseAircraftComponent.parseName(componentName);
 
-        List<IAircraftComponent> components = tileEntity.getComponents().get(componentType);
-        if (components != null && components.size() > componentId) {
-            return getLuaFunctions(components.get(componentId));
+        List<IAircraftComponent> components = tileEntity.getComponents().get(name.getKey());
+        if (components != null && components.size() > name.getValue()) {
+            return getLuaFunctions(components.get(name.getValue()));
         }
 
         return Collections.emptyMap();

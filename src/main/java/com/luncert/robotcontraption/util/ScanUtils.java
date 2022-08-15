@@ -9,10 +9,7 @@ import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.BiFunction;
 
 public class ScanUtils {
@@ -27,23 +24,13 @@ public class ScanUtils {
         Set<BlockPos> visited = new HashSet<>();
 
         Stack<BlockPos> stack = new Stack<>();
-        stack.add(base.above());
-        stack.add(base.below());
-        stack.add(base.west());
-        stack.add(base.east());
-        stack.add(base.south());
-        stack.add(base.north());
+        listAllRelativePos(stack, base);
         visited.add(base);
         while (!stack.isEmpty()) {
             BlockPos pos = stack.pop();
             BlockState blockState = world.getBlockState(pos);
             if (!visited.contains(pos) && blockState.is(targetBlock)) {
-                stack.add(pos.above());
-                stack.add(pos.below());
-                stack.add(pos.west());
-                stack.add(pos.east());
-                stack.add(pos.south());
-                stack.add(pos.north());
+                listAllRelativePos(stack, pos);
                 visited.add(pos);
 
                 ax = Math.min(pos.getX(), ax);
@@ -56,6 +43,30 @@ public class ScanUtils {
         }
 
         return Pair.of(new Vec3(ax, ay, az), new Vec3(bx, by, bz));
+    }
+
+    private static void listAllRelativePos(Collection<BlockPos> collection, BlockPos pos) {
+        collection.add(pos.above());
+        pos = pos.below();
+        collection.add(pos);
+
+        final BlockPos[] template = new BlockPos[8];
+        template[0] = pos.west();
+        template[1] = pos.east();
+        template[2] = pos.south();
+        template[3] = pos.north();
+        template[4] = template[2].west();
+        template[5] = template[2].east();
+        template[6] = template[3].west();
+        template[7] = template[3].east();
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 8; j++) {
+                BlockPos blockPos = template[j];
+                collection.add(blockPos);
+                template[j] = blockPos.above();
+            }
+        }
     }
 
     public static void relativeTraverseBlocks(Level world, BlockPos center, int radius, BiFunction<BlockState, BlockPos, Boolean> consumer) {

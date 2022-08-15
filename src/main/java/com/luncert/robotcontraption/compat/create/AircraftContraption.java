@@ -1,8 +1,8 @@
 package com.luncert.robotcontraption.compat.create;
 
-import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.aircraft.AircraftAccessor;
 import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
+import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.content.aircraft.AircraftEntity;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
@@ -19,7 +19,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -116,27 +115,34 @@ public class AircraftContraption extends Contraption {
     protected Pair<StructureBlockInfo, BlockEntity> capture(Level world, BlockPos pos) {
         Pair<StructureBlockInfo, BlockEntity> pair = super.capture(world, pos);
         StructureBlockInfo capture = pair.getKey();
-        captureAircraftComponent(pair);
         if (!RCBlocks.AIRCRAFT_STATION.has(capture.state)) {
             return pair;
         }
 
         // replace aircraft station with anchor block
-        return Pair.of( new StructureBlockInfo(pos, AircraftStationBlock.createAnchor(capture.state), null), pair.getValue());
+        return Pair.of(new StructureBlockInfo(pos, AircraftStationBlock.createAnchor(capture.state), null), pair.getValue());
     }
 
-    private void captureAircraftComponent(Pair<StructureBlockInfo, BlockEntity> entry) {
-        LazyOptional<IAircraftComponent> opt = entry.getValue().getCapability(RCCapabilities.CAPABILITY_AIRCRAFT_COMPONENT);
+    @Override
+    protected void addBlock(BlockPos pos, Pair<StructureBlockInfo, BlockEntity> pair) {
+        super.addBlock(pos, pair);
+
+        if (pair.getValue() == null) {
+            return;
+        }
+
+        BlockPos localPos = getLocalPos(pos);
+        LazyOptional<IAircraftComponent> opt = pair.getValue().getCapability(RCCapabilities.CAPABILITY_AIRCRAFT_COMPONENT);
         opt.ifPresent(c ->
                 components.compute(c.getComponentType().getName(), (k, v) -> {
-                   if (v == null) {
-                       v = new LinkedList<>();
-                   }
+                    if (v == null) {
+                        v = new LinkedList<>();
+                    }
 
-                   componentBlockInfoMap.put(c.getComponentType().getName() + "-" + v.size(), entry.getKey());
+                    componentBlockInfoMap.put(c.getComponentType().getName() + "-" + v.size(), blocks.get(localPos));
 
-                   v.add(c);
-                   return v;
+                    v.add(c);
+                    return v;
                 }));
     }
 
@@ -153,35 +159,33 @@ public class AircraftContraption extends Contraption {
 
         NBTHelper.writeEnum(tag, "RotationMode", rotationMode);
 
-        if (!spawnPacket) {
-            ListTag componentList = new ListTag();
-            for (Map.Entry<String, List<IAircraftComponent>> entry : components.entrySet()) {
-                List<IAircraftComponent> components = entry.getValue();
-                for (int i = 0; i < components.size(); i++) {
-                    CompoundTag item = new CompoundTag();
-                    item.putString("name", entry.getKey() + "-" + i);
-
-                    IAircraftComponent component = components.get(i);
-                    CompoundTag c = component.writeNBT();
-                    if (c != null) {
-                        item.put("component", c);
-                    }
-
-                    componentList.add(item);
-                }
-            }
-
-            ListTag componentInfoList = new ListTag();
-            for (Map.Entry<String, StructureBlockInfo> entry : componentBlockInfoMap.entrySet()) {
+        ListTag componentList = new ListTag();
+        for (Map.Entry<String, List<IAircraftComponent>> entry : components.entrySet()) {
+            List<IAircraftComponent> components = entry.getValue();
+            for (int i = 0; i < components.size(); i++) {
                 CompoundTag item = new CompoundTag();
-                item.putString("name", entry.getKey());
-                item.put("pos", NbtUtils.writeBlockPos(getLocalPos(entry.getValue().pos)));
-                componentInfoList.add(item);
-            }
+                item.putString("name", entry.getKey() + "-" + i);
 
-            tag.put("components", componentList);
-            tag.put("componentInfoMappings", componentInfoList);
+                IAircraftComponent component = components.get(i);
+                Tag c = component.writeNBT();
+                if (c != null) {
+                    item.put("component", c);
+                }
+
+                componentList.add(item);
+            }
         }
+
+        ListTag componentInfoList = new ListTag();
+        for (Map.Entry<String, StructureBlockInfo> entry : componentBlockInfoMap.entrySet()) {
+            CompoundTag item = new CompoundTag();
+            item.putString("name", entry.getKey());
+            item.putLong("pos", entry.getValue().pos.asLong());
+            componentInfoList.add(item);
+        }
+
+        tag.put("components", componentList);
+        tag.put("componentInfoMappings", componentInfoList);
 
         // System.out.println("write -" + tag);
         return tag;
@@ -194,39 +198,35 @@ public class AircraftContraption extends Contraption {
 
         rotationMode = NBTHelper.readEnum(nbt, "RotationMode", EAircraftMovementMode.class);
 
-        if (!spawnData) {
-            this.components.clear();
-            ListTag componentList = nbt.getList("components", 10);
-            for (Tag tag : componentList) {
-                CompoundTag componentNbt = (CompoundTag) tag;
-                String componentName = componentNbt.getString("name");
-                int i = componentName.lastIndexOf('-');
-                String componentType = componentName.substring(0, i);
-                int componentId = Integer.parseInt(componentName.substring(i + 1));
-                this.components.compute(componentType, (k, v) -> {
-                    if (v == null) {
-                        v = new ArrayList<>();
-                    }
-                    for (int n = v.size(); n <= componentId; n++) {
-                        v.add(null);
-                    }
-                    IAircraftComponent component = AircraftComponentType.createComponent(componentType);
-                    component.readNBT(world, componentNbt);
+        this.components.clear();
+        ListTag componentList = nbt.getList("components", 10);
+        for (Tag tag : componentList) {
+            CompoundTag componentNbt = (CompoundTag) tag;
+            Pair<String, Integer> name = BaseAircraftComponent.parseName(componentNbt.getString("name"));
+            String componentType = name.getKey();
+            int componentId = name.getValue();
+            this.components.compute(componentType, (k, v) -> {
+                if (v == null) {
+                    v = new ArrayList<>();
+                }
+                for (int n = v.size(); n <= componentId; n++) {
+                    v.add(null);
+                }
+                IAircraftComponent component = AircraftComponentType.createComponent(componentType);
+                component.readNBT(world, componentNbt.getCompound("component"));
 
-                    v.set(componentId, component);
-                    return v;
-                });
-            }
+                v.set(componentId, component);
+                return v;
+            });
+        }
 
-            this.componentBlockInfoMap.clear();
-            ListTag componentInfoList = nbt.getList("componentInfoMappings", CompoundTag.TAG_COMPOUND);
-            RobotContraption.LOGGER.info("{}", blocks);
-            for (Tag tag : componentInfoList) {
-                CompoundTag componentNbt = (CompoundTag) tag;
-                String name = componentNbt.getString("name");
-                BlockPos blockPos = NbtUtils.readBlockPos(componentNbt.getCompound("pos"));
-                this.componentBlockInfoMap.put(name, blocks.get(blockPos));
-            }
+        this.componentBlockInfoMap.clear();
+        ListTag componentInfoList = nbt.getList("componentInfoMappings", CompoundTag.TAG_COMPOUND);
+        // RobotContraption.LOGGER.info("{}", blocks);
+        for (Tag tag : componentInfoList) {
+            CompoundTag componentNbt = (CompoundTag) tag;
+            String name = componentNbt.getString("name");
+            this.componentBlockInfoMap.put(name, blocks.get(BlockPos.of(componentNbt.getLong("pos"))));
         }
     }
 

@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.Vec3;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
 import java.util.List;
@@ -59,20 +60,12 @@ public final class AircraftAccessor {
         return components == null ? Collections.emptyList() : (List<T>) components;
     }
 
-    public Optional<IAircraftComponent> getComponent(String name) {
-        String componentType;
-        int componentId;
-        try {
-            String[] split = name.split("-");
-            componentType = split[0];
-            componentId = Integer.parseInt(split[1]);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("invalid component name");
-        }
+    public Optional<IAircraftComponent> getComponent(String componentName) {
+        Pair<String, Integer> name = BaseAircraftComponent.parseName(componentName);
 
-        List<IAircraftComponent> components = station.getComponents().get(componentType);
-        if (components != null && components.size() > componentId) {
-            return Optional.of(components.get(componentId));
+        List<IAircraftComponent> components = station.getComponents().get(name.getKey());
+        if (components != null && components.size() > name.getValue()) {
+            return Optional.of(components.get(name.getValue()));
         }
 
         return Optional.empty();

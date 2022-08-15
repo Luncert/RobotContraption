@@ -1,7 +1,9 @@
 package com.luncert.robotcontraption.compat.aircraft;
 
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
+
+import javax.annotation.Nullable;
 
 public interface IAircraftComponent {
 
@@ -13,7 +15,8 @@ public interface IAircraftComponent {
 
     AircraftComponentType getComponentType();
 
-    CompoundTag writeNBT();
+    @Nullable
+    Tag writeNBT();
 
-    void readNBT(Level world, CompoundTag root);
+    void readNBT(Level world, Tag tag);
 }
