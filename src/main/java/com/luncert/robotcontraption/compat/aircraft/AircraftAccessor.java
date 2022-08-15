@@ -4,13 +4,11 @@ import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripher
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.content.aircraft.AircraftEntity;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
-import com.luncert.robotcontraption.util.Common;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
@@ -77,8 +75,7 @@ public final class AircraftAccessor {
             throw new IllegalArgumentException("block info missing for " + name);
         }
 
-        Vec3 componentPos = aircraft.getAircraftPosition().add(Common.convert(contraption.getLocalPos(blockInfo.pos)));
-        return new BlockPos(componentPos.x, componentPos.y, componentPos.z);
+        return contraption.getWorldPos(blockInfo.pos);
     }
 
     public BlockState getComponentBlockState(String name) {

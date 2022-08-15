@@ -64,6 +64,10 @@ public class AircraftContraption extends Contraption {
         return pos.subtract(anchor);
     }
 
+    public BlockPos getWorldPos(BlockPos pos) {
+        return anchor.offset(pos.getX(), pos.getY(), pos.getZ());
+    }
+
     public void initComponents(Level level, AircraftEntity aircraft) {
         if (accessor != null) {
             return;

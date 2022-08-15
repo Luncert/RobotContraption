@@ -90,7 +90,7 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public List<String> getComponents() {
+    public final List<String> getComponents() {
         Map<String, List<IAircraftComponent>> components = tileEntity.getComponents();
         List<String> result = new ArrayList<>(components.size());
         for (List<IAircraftComponent> value : components.values()) {
@@ -103,7 +103,7 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public Map<String, ILuaFunction> getComponent(String componentName) throws LuaException {
+    public final Map<String, ILuaFunction> getComponent(String componentName) throws LuaException {
         Pair<String, Integer> name = BaseAircraftComponent.parseName(componentName);
 
         List<IAircraftComponent> components = tileEntity.getComponents().get(name.getKey());

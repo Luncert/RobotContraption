@@ -2,6 +2,7 @@ package com.luncert.robotcontraption.content.blockreader;
 
 import com.luncert.robotcontraption.index.RCTileEntities;
 import com.simibubi.create.foundation.block.ITE;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DirectionalBlock;
@@ -25,7 +26,11 @@ public class BlockReaderBlock extends DirectionalBlock implements ITE<BlockReade
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        Direction direction = context.getNearestLookingDirection();
+        if (context.getPlayer() != null && context.getPlayer()
+                .isSteppingCarefully())
+            direction = direction.getOpposite();
+        return this.defaultBlockState().setValue(FACING, direction.getOpposite());
     }
 
     @Override

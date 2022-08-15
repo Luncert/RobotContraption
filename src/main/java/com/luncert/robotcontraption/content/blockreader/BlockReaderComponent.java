@@ -25,10 +25,11 @@ public class BlockReaderComponent extends BaseAircraftComponent {
 
     @LuaFunction
     public Map<String, Object> readBlock() {
+        // TODO fetch crops growing status
         BlockState state = accessor.getComponentBlockState(name);
-        BlockPos pos = accessor.getComponentPos(name);
+        BlockPos worldPos = accessor.getComponentPos(name);
 
-        BlockPos targetPos = pos.relative(state.getValue(DirectionalBlock.FACING));
+        BlockPos targetPos = worldPos.relative(state.getValue(DirectionalBlock.FACING));
         BlockState targetState = accessor.world.getBlockState(targetPos);
         Block targetBlock = targetState.getBlock();
         ResourceLocation name = targetBlock.getRegistryName();
