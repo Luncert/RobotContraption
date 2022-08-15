@@ -154,98 +154,102 @@ public class AircraftContraption extends Contraption {
 
         NBTHelper.writeEnum(tag, "RotationMode", rotationMode);
 
-        ListTag componentList = new ListTag();
-        for (Map.Entry<String, List<IAircraftComponent>> entry : components.entrySet()) {
-            List<IAircraftComponent> components = entry.getValue();
-            for (int i = 0; i < components.size(); i++) {
-                CompoundTag item = new CompoundTag();
-                item.putString("name", entry.getKey() + "-" + i);
+        if (!spawnPacket) {
+            ListTag componentList = new ListTag();
+            for (Map.Entry<String, List<IAircraftComponent>> entry : components.entrySet()) {
+                List<IAircraftComponent> components = entry.getValue();
+                for (int i = 0; i < components.size(); i++) {
+                    CompoundTag item = new CompoundTag();
+                    item.putString("name", entry.getKey() + "-" + i);
 
-                IAircraftComponent component = components.get(i);
-                CompoundTag c = component.writeNBT();
-                if (c != null) {
-                    item.put("component", c);
+                    IAircraftComponent component = components.get(i);
+                    CompoundTag c = component.writeNBT();
+                    if (c != null) {
+                        item.put("component", c);
+                    }
+
+                    componentList.add(item);
                 }
-
-                componentList.add(item);
             }
+
+            ListTag componentInfoList = new ListTag();
+            for (Map.Entry<String, StructureBlockInfo> entry : componentBlockInfoMap.entrySet()) {
+                CompoundTag item = new CompoundTag();
+                item.putString("name", entry.getKey());
+                item.put("pos", NbtUtils.writeBlockPos(getLocalPos(entry.getValue().pos)));
+                componentInfoList.add(item);
+            }
+
+            tag.put("components", componentList);
+            tag.put("componentInfoMappings", componentInfoList);
+
+            tag.putString("aircraftId", aircraft.getUUID().toString());
+
+            BlockPos stationPosition = aircraft.getStationPosition();
+            CompoundTag stationPos = new CompoundTag();
+            stationPos.putInt("x", stationPosition.getX());
+            stationPos.putInt("y", stationPosition.getY());
+            stationPos.putInt("z", stationPosition.getZ());
+            tag.put("stationPosition", stationPos);
+
+            System.out.println("write -" + tag);
         }
-
-        ListTag componentInfoList = new ListTag();
-        for (Map.Entry<String, StructureBlockInfo> entry : componentBlockInfoMap.entrySet()) {
-            CompoundTag item = new CompoundTag();
-            item.putString("name", entry.getKey());
-            item.put("pos", NbtUtils.writeBlockPos(getLocalPos(entry.getValue().pos)));
-            componentInfoList.add(item);
-        }
-
-        tag.put("components", componentList);
-        tag.put("componentInfoMappings", componentInfoList);
-
-        tag.putString("aircraftId", aircraft.getUUID().toString());
-
-        BlockPos stationPosition = aircraft.getStationPosition();
-        CompoundTag stationPos = new CompoundTag();
-        stationPos.putInt("x", stationPosition.getX());
-        stationPos.putInt("y", stationPosition.getY());
-        stationPos.putInt("z", stationPosition.getZ());
-        tag.put("stationPosition", stationPos);
-
-        System.out.println(tag);
         return tag;
     }
 
     @Override
     public void readNBT(Level world, CompoundTag nbt, boolean spawnData) {
         super.readNBT(world, nbt, spawnData);
-        System.out.println(nbt);
+        System.out.println("read - " + nbt);
 
         rotationMode = NBTHelper.readEnum(nbt, "RotationMode", EAircraftMovementMode.class);
 
-        this.components.clear();
-        ListTag componentList = nbt.getList("components", 10);
-        for (Tag tag : componentList) {
-            CompoundTag componentNbt = (CompoundTag) tag;
-            String componentName = componentNbt.getString("name");
-            int i = componentName.lastIndexOf('-');
-            String componentType = componentName.substring(0, i);
-            int componentId = Integer.parseInt(componentName.substring(i + 1));
-            this.components.compute(componentType, (k, v) -> {
-                if (v == null) {
-                    v = new ArrayList<>();
-                }
-                for (int n = v.size(); n <= componentId; n++) {
-                    v.add(null);
-                }
-                IAircraftComponent component = AircraftComponentType.createComponent(componentType);
-                component.readNBT(world, componentNbt);
+        if (!spawnData) {
+            this.components.clear();
+            ListTag componentList = nbt.getList("components", 10);
+            for (Tag tag : componentList) {
+                CompoundTag componentNbt = (CompoundTag) tag;
+                String componentName = componentNbt.getString("name");
+                int i = componentName.lastIndexOf('-');
+                String componentType = componentName.substring(0, i);
+                int componentId = Integer.parseInt(componentName.substring(i + 1));
+                this.components.compute(componentType, (k, v) -> {
+                    if (v == null) {
+                        v = new ArrayList<>();
+                    }
+                    for (int n = v.size(); n <= componentId; n++) {
+                        v.add(null);
+                    }
+                    IAircraftComponent component = AircraftComponentType.createComponent(componentType);
+                    component.readNBT(world, componentNbt);
 
-                v.set(componentId, component);
-                return v;
-            });
-        }
+                    v.set(componentId, component);
+                    return v;
+                });
+            }
 
-        this.componentBlockInfoMap.clear();
-        ListTag componentInfoList = nbt.getList("componentInfoMappings", CompoundTag.TAG_COMPOUND);
-        RobotContraption.LOGGER.info("{}", blocks);
-        for (Tag tag : componentInfoList) {
-            CompoundTag componentNbt = (CompoundTag) tag;
-            String name = componentNbt.getString("name");
-            BlockPos blockPos = NbtUtils.readBlockPos(componentNbt.getCompound("pos"));
-            this.componentBlockInfoMap.put(name, blocks.get(blockPos));
-        }
+            this.componentBlockInfoMap.clear();
+            ListTag componentInfoList = nbt.getList("componentInfoMappings", CompoundTag.TAG_COMPOUND);
+            RobotContraption.LOGGER.info("{}", blocks);
+            for (Tag tag : componentInfoList) {
+                CompoundTag componentNbt = (CompoundTag) tag;
+                String name = componentNbt.getString("name");
+                BlockPos blockPos = NbtUtils.readBlockPos(componentNbt.getCompound("pos"));
+                this.componentBlockInfoMap.put(name, blocks.get(blockPos));
+            }
 
-        if (world instanceof ServerLevel level) {
-            aircraft = (AircraftEntity) level.getEntity(UUID.fromString(nbt.getString("aircraftId")));
+            if (world instanceof ServerLevel level) {
+                aircraft = (AircraftEntity) level.getEntity(UUID.fromString(nbt.getString("aircraftId")));
+            }
+            CompoundTag stationPos = nbt.getCompound("stationPosition");
+            BlockPos stationPosition = new BlockPos(
+                    stationPos.getInt("x"),
+                    stationPos.getInt("y"),
+                    stationPos.getInt("z"));
+            AircraftStationTileEntity station = (AircraftStationTileEntity) world.getBlockEntity(stationPosition);
+            accessor = new AircraftAccessor(world, station.getPeripheral(), station, aircraft, this);
+            initComponents();
         }
-        CompoundTag stationPos = nbt.getCompound("stationPosition");
-        BlockPos stationPosition = new BlockPos(
-                stationPos.getInt("x"),
-                stationPos.getInt("y"),
-                stationPos.getInt("z"));
-        AircraftStationTileEntity station = (AircraftStationTileEntity) world.getBlockEntity(stationPosition);
-        accessor = new AircraftAccessor(world, station.getPeripheral(), station, aircraft, this);
-        initComponents();
     }
 
     @Override

@@ -130,7 +130,10 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         super.tick();
 
         if (level instanceof ServerLevel world && aircraft == null && aircraftId != null) {
-            aircraft = (AircraftEntity) world.getEntity(aircraftId);
+            if (world.getEntity(aircraftId) instanceof AircraftEntity aircraft) {
+                this.aircraft = aircraft;
+                aircraft.bindStation(this);
+            }
         }
     }
 }

@@ -94,6 +94,10 @@ public class AircraftEntity extends Entity {
         return entityBuilder.sized(0.1f, 0.1f);
     }
 
+    public void bindStation(AircraftStationTileEntity station) {
+        this.station = station;
+    }
+
     public BlockPos getStationPosition() {
         return station.getBlockPos();
     }
