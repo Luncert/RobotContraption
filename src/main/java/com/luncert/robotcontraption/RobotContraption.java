@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 public class RobotContraption
 {
     // Directly reference a slf4j logger
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     private static final NonNullSupplier<CreateRegistrate> REGISTRATE = CreateRegistrate.lazy(Reference.MOD_ID);
 

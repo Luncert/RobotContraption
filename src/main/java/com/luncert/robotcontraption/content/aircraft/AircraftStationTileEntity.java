@@ -1,8 +1,7 @@
 package com.luncert.robotcontraption.content.aircraft;
 
-import com.luncert.robotcontraption.compat.aircraft.AircraftAccessor;
-import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
 import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
+import com.luncert.robotcontraption.compat.computercraft.AircraftStationPeripheral;
 import com.luncert.robotcontraption.compat.computercraft.Peripherals;
 import com.luncert.robotcontraption.compat.create.AircraftContraption;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
@@ -10,6 +9,8 @@ import com.luncert.robotcontraption.exception.AircraftAssemblyException;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -19,13 +20,15 @@ import net.minecraftforge.common.util.LazyOptional;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.simibubi.create.content.contraptions.base.HorizontalKineticBlock.HORIZONTAL_FACING;
 
 public class AircraftStationTileEntity extends KineticTileEntity {
 
     private AircraftStationPeripheral peripheral;
-    private AircraftEntity entity;
+    private UUID aircraftId;
+    private AircraftEntity aircraft;
 
     public AircraftStationTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -36,15 +39,19 @@ public class AircraftStationTileEntity extends KineticTileEntity {
 
     // api
 
+    public AircraftStationPeripheral getPeripheral() {
+        return peripheral;
+    }
+
     public Map<String, List<IAircraftComponent>> getComponents() {
-        if (entity == null) {
+        if (aircraft == null) {
             return Collections.emptyMap();
         }
-        return entity.getContraption().map(AircraftContraption::getComponents).orElse(Collections.emptyMap());
+        return aircraft.getContraption().map(AircraftContraption::getComponents).orElse(Collections.emptyMap());
     }
 
     public void assemble(EAircraftMovementMode mode) throws AircraftAssemblyException {
-        if (entity != null) {
+        if (aircraft != null) {
             throw new AircraftAssemblyException("aircraft_assembled");
         }
 
@@ -54,21 +61,8 @@ public class AircraftStationTileEntity extends KineticTileEntity {
             aircraft.discard();
             throw new AircraftAssemblyException("structure_not_found");
         }
-        this.entity = aircraft;
-
-        initComponents();
-    }
-
-    public void initComponents() {
-        AircraftAccessor accessor = new AircraftAccessor(level, peripheral, this, entity, entity.getContraption().orElseThrow());
-        for (Map.Entry<String, List<IAircraftComponent>> entry : getComponents().entrySet()) {
-            List<IAircraftComponent> components = entry.getValue();
-            for (int i = 0; i < components.size(); i++) {
-                IAircraftComponent c = components.get(i);
-                String name = c.getComponentType().getName() + "-" + i;
-                c.init(accessor, name);
-            }
-        }
+        this.aircraft = aircraft;
+        this.aircraftId = aircraft.getUUID();
     }
 
     public void dissemble() throws AircraftAssemblyException {
@@ -79,8 +73,8 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         //     throw new AircraftAssemblyException("not_dissemble_at_station");
         // }
 
-        entity.dissemble();
-        entity = null;
+        aircraft.dissemble();
+        aircraft = null;
     }
 
     public Vec3 getStationPosition() {
@@ -92,7 +86,7 @@ public class AircraftStationTileEntity extends KineticTileEntity {
     }
 
     private void checkContraptionStatus() throws AircraftAssemblyException {
-        if (entity == null) {
+        if (aircraft == null) {
             throw new AircraftAssemblyException("aircraft_dissembled");
         }
     }
@@ -113,7 +107,30 @@ public class AircraftStationTileEntity extends KineticTileEntity {
         peripheral = null;
     }
 
-    public void rebindAircraftEntity(AircraftEntity entity) {
-        this.entity = entity;
+    @Override
+    protected void write(CompoundTag compound, boolean clientPacket) {
+        super.write(compound, clientPacket);
+
+        if (!clientPacket) {
+            compound.putString("aircraft", aircraftId.toString());
+        }
+    }
+
+    @Override
+    protected void read(CompoundTag compound, boolean clientPacket) {
+        super.read(compound, clientPacket);
+
+        if (!clientPacket) {
+            aircraftId = UUID.fromString(compound.getString("aircraft"));
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        if (level instanceof ServerLevel world && aircraft == null && aircraftId != null) {
+            aircraft = (AircraftEntity) world.getEntity(aircraftId);
+        }
     }
 }

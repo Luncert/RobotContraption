@@ -78,9 +78,7 @@ public final class AircraftAccessor {
             throw new IllegalArgumentException("block info missing for " + name);
         }
 
-        BlockPos anchorPos = contraption.getAnchorPos();
-        BlockPos relativeDist = blockInfo.pos.subtract(anchorPos);
-        Vec3 componentPos = aircraft.getAircraftPosition().add(Common.convert(relativeDist));
+        Vec3 componentPos = aircraft.getAircraftPosition().add(Common.convert(contraption.getLocalPos(blockInfo.pos)));
         return new BlockPos(componentPos.x, componentPos.y, componentPos.z);
     }
 

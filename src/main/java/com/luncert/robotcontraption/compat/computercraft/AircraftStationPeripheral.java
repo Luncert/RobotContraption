@@ -1,5 +1,6 @@
 package com.luncert.robotcontraption.compat.computercraft;
 
+import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
@@ -12,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 public class AircraftStationPeripheral implements IPeripheral {
@@ -86,7 +88,7 @@ public class AircraftStationPeripheral implements IPeripheral {
     }
 
     @LuaFunction
-    public List<String> getComponents() throws LuaException {
+    public List<String> getComponents() {
         Map<String, List<IAircraftComponent>> components = tileEntity.getComponents();
         List<String> result = new ArrayList<>(components.size());
         for (List<IAircraftComponent> value : components.values()) {
@@ -112,22 +114,39 @@ public class AircraftStationPeripheral implements IPeripheral {
 
         List<IAircraftComponent> components = tileEntity.getComponents().get(componentType);
         if (components != null && components.size() > componentId) {
-            IAircraftComponent c = components.get(componentId);
-            Map<String, ILuaFunction> functions = new HashMap<>();
-            for (Method method : c.getClass().getDeclaredMethods()) {
-                if (method.isAnnotationPresent(LuaFunction.class)) {
-                    functions.put(method.getName(), wrapComponentMethod(c, method));
-                }
-            }
-            return functions;
+            return getLuaFunctions(components.get(componentId));
         }
 
         return Collections.emptyMap();
     }
 
-    private ILuaFunction wrapComponentMethod(IAircraftComponent c, Method method) {
+    private Map<String, ILuaFunction> getLuaFunctions(IAircraftComponent c) {
+        Map<String, ILuaFunction> functions = new HashMap<>();
+        for (Method method : c.getClass().getDeclaredMethods()) {
+            if (method.isAnnotationPresent(LuaFunction.class)) {
+                String name = method.getDeclaringClass().getName() + "." + method.getName();
+                int modifiers = method.getModifiers();
+
+                if(!Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers)) {
+                    RobotContraption.LOGGER.warn("Lua Method {} should be final.", name);
+                }
+
+                if(!Modifier.isPublic(modifiers)) {
+                    RobotContraption.LOGGER.error( "Lua Method {} should be a public method.", name );
+                    return Collections.emptyMap();
+                }
+
+                functions.put(method.getName(), generate(c, method));
+            }
+        }
+
+        return functions;
+    }
+
+    private ILuaFunction generate(IAircraftComponent c, Method method) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         return arguments -> {
+            RobotContraption.LOGGER.info("{} - {}", arguments.getAll(), parameterTypes);
             Object[] args = parseArguments(arguments, parameterTypes);
             try {
                 Object result = method.invoke(c, args);

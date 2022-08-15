@@ -26,7 +26,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -52,8 +51,9 @@ public class AircraftEntity extends Entity {
     private static final EntityDataAccessor<Optional<AircraftMovement>> TARGET_MOVEMENT =
             SynchedEntityData.defineId(AircraftEntity.class, MOVEMENT_SERIALIZER);
 
-    private BlockPos stationPosition = BlockPos.ZERO;
     private BlockState stationBlockState = RCBlocks.AIRCRAFT_STATION.get().defaultBlockState();
+    private AircraftStationTileEntity station;
+    private int ttlAfterLostBinding = Integer.MIN_VALUE;
 
     private final Queue<ActionCallback> asyncCallbacks = new ArrayDeque<>();
     private final Signal signal = new Signal();
@@ -75,7 +75,7 @@ public class AircraftEntity extends Entity {
     // for server
     public AircraftEntity(Level world, BlockPos stationPos, BlockState stationBlockState) {
         super(RCEntityTypes.AIRCRAFT.get(), world);
-        this.stationPosition = stationPos;
+        this.station = (AircraftStationTileEntity) level.getBlockEntity(stationPos);
         this.stationBlockState = stationBlockState;
         // following data will be synced automatically
         setPos(stationPos.getX() + .5f, stationPos.getY(), stationPos.getZ() + .5f);
@@ -95,11 +95,11 @@ public class AircraftEntity extends Entity {
     }
 
     public BlockPos getStationPosition() {
-        return stationPosition;
+        return station.getBlockPos();
     }
 
     public boolean assemble(BlockPos pos, EAircraftMovementMode mode) throws AircraftAssemblyException {
-        AircraftContraption contraption = new AircraftContraption(mode);
+        AircraftContraption contraption = new AircraftContraption(mode, this);
         try {
             if (!contraption.assemble(level, pos)) {
                 return false;
@@ -153,7 +153,6 @@ public class AircraftEntity extends Entity {
         checkSpeed();
         checkMotion();
         checkSignal();
-        System.out.println("?????");
         moveForward(n, callback);
     }
 
@@ -255,12 +254,18 @@ public class AircraftEntity extends Entity {
     @Override
     public void tick() {
         if (this.stationBlockState.isAir()) {
+            // invalid block state
             discard();
             return;
         }
 
-        if (!level.isClientSide && !(level.getBlockEntity(stationPosition) instanceof AircraftStationTileEntity)) {
-            dissemble();
+        if (!level.isClientSide && station == null) {
+            // if lost binding to station, dissemble
+            if (ttlAfterLostBinding == Integer.MIN_VALUE) {
+                ttlAfterLostBinding = 10;
+            } else if (--ttlAfterLostBinding < 0) {
+                dissemble();
+            }
             return;
         }
 
@@ -346,6 +351,9 @@ public class AircraftEntity extends Entity {
         }
 
         getContraption().ifPresent(contraption -> {
+            if (!contraption.isComponentsInitialized()) {
+                return;
+            }
             for (List<IAircraftComponent> value : contraption.getComponents().values()) {
                 for (IAircraftComponent component : value) {
                     component.tickComponent();
@@ -460,16 +468,6 @@ public class AircraftEntity extends Entity {
                     targetMovement.getBoolean("positive"),
                     targetMovement.getFloat("expectedPos")));
         }
-
-        CompoundTag stationPos = root.getCompound("stationPosition");
-        stationPosition = new BlockPos(
-                stationPos.getInt("x"),
-                stationPos.getInt("y"),
-                stationPos.getInt("z"));
-        BlockEntity blockEntity = level.getBlockEntity(stationPosition);
-        if (blockEntity instanceof AircraftStationTileEntity te) {
-            te.rebindAircraftEntity(this);
-        }
     }
 
     @Override
@@ -486,12 +484,6 @@ public class AircraftEntity extends Entity {
             targetMovement.putFloat("expectedPos", movement.expectedPos);
             root.put("targetMovement", targetMovement);
         });
-
-        CompoundTag stationPos = new CompoundTag();
-        stationPos.putInt("x", stationPosition.getX());
-        stationPos.putInt("y", stationPosition.getY());
-        stationPos.putInt("z", stationPosition.getZ());
-        root.put("stationPosition", stationPos);
     }
 
     @Override
