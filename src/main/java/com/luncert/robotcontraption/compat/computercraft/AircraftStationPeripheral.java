@@ -5,6 +5,7 @@ import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.create.EAircraftMovementMode;
 import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
 import com.luncert.robotcontraption.exception.AircraftAssemblyException;
+import com.luncert.robotcontraption.util.Common;
 import dan200.computercraft.api.lua.*;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
@@ -146,7 +147,6 @@ public class AircraftStationPeripheral implements IPeripheral {
     private ILuaFunction generate(IAircraftComponent c, Method method) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         return arguments -> {
-            RobotContraption.LOGGER.info("{} - {}", arguments.getAll(), parameterTypes);
             Object[] args = parseArguments(arguments, parameterTypes);
             try {
                 Object result = method.invoke(c, args);
@@ -154,8 +154,9 @@ public class AircraftStationPeripheral implements IPeripheral {
                     return r;
                 }
                 return MethodResult.of(result);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new LuaException(e.getMessage());
+            } catch (Exception e) {
+                RobotContraption.LOGGER.error("failed to call component api", e);
+                throw new LuaException(Common.findCauseUsingPlainJava(e).getMessage());
             }
         };
     }

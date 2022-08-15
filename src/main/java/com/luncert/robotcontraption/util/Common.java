@@ -8,6 +8,8 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
 
+import java.util.Objects;
+
 public class Common {
 
     private Common() {
@@ -69,5 +71,14 @@ public class Common {
             }
         }
         return false;
+    }
+
+    public static Throwable findCauseUsingPlainJava(Throwable throwable) {
+        Objects.requireNonNull(throwable);
+        Throwable rootCause = throwable;
+        while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {
+            rootCause = rootCause.getCause();
+        }
+        return rootCause;
     }
 }

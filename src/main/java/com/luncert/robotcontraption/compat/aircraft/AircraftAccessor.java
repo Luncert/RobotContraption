@@ -14,6 +14,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -31,6 +32,11 @@ public final class AircraftAccessor {
                             AircraftStationTileEntity station,
                             AircraftEntity aircraft,
                             AircraftContraption contraption) {
+        Objects.requireNonNull(world);
+        Objects.requireNonNull(peripheral);
+        Objects.requireNonNull(station);
+        Objects.requireNonNull(aircraft);
+        Objects.requireNonNull(contraption);
         this.world = world;
         this.peripheral = peripheral;
         this.station = station;

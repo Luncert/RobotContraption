@@ -355,9 +355,7 @@ public class AircraftEntity extends Entity {
         }
 
         getContraption().ifPresent(contraption -> {
-            if (!contraption.isComponentsInitialized()) {
-                return;
-            }
+            contraption.initComponents(level, this);
             for (List<IAircraftComponent> value : contraption.getComponents().values()) {
                 for (IAircraftComponent component : value) {
                     component.tickComponent();

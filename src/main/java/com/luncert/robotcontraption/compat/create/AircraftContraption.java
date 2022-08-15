@@ -21,7 +21,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -54,10 +53,6 @@ public class AircraftContraption extends Contraption {
         this.aircraft = aircraft;
     }
 
-    public boolean isComponentsInitialized() {
-        return accessor != null;
-    }
-
     public Map<String, List<IAircraftComponent>> getComponents() {
         return components;
     }
@@ -68,6 +63,24 @@ public class AircraftContraption extends Contraption {
 
     public BlockPos getLocalPos(BlockPos pos) {
         return pos.subtract(anchor);
+    }
+
+    public void initComponents(Level level, AircraftEntity aircraft) {
+        if (accessor != null) {
+            return;
+        }
+        this.aircraft = aircraft;
+        AircraftStationTileEntity station = (AircraftStationTileEntity) level.getBlockEntity(aircraft.getStationPosition());
+        accessor = new AircraftAccessor(level, station.getPeripheral(), station, aircraft, this);
+
+        for (Map.Entry<String, List<IAircraftComponent>> entry : getComponents().entrySet()) {
+            List<IAircraftComponent> components = entry.getValue();
+            for (int i = 0; i < components.size(); i++) {
+                IAircraftComponent c = components.get(i);
+                String name = c.getComponentType().getName() + "-" + i;
+                c.init(accessor, name);
+            }
+        }
     }
 
     @Override
@@ -85,10 +98,7 @@ public class AircraftContraption extends Contraption {
                 pos, RCBlocks.AIRCRAFT_ANCHOR.getDefaultState(), null), null));
 
         if (blocks.size() != 1) {
-            BlockPos stationPosition = aircraft.getStationPosition();
-            AircraftStationTileEntity station = (AircraftStationTileEntity) world.getBlockEntity(stationPosition);
-            accessor = new AircraftAccessor(world, station.getPeripheral(), station, aircraft, this);
-            initComponents();
+            initComponents(world, aircraft);
             return true;
         }
 
@@ -128,17 +138,6 @@ public class AircraftContraption extends Contraption {
                    v.add(c);
                    return v;
                 }));
-    }
-
-    private void initComponents() {
-        for (Map.Entry<String, List<IAircraftComponent>> entry : getComponents().entrySet()) {
-            List<IAircraftComponent> components = entry.getValue();
-            for (int i = 0; i < components.size(); i++) {
-                IAircraftComponent c = components.get(i);
-                String name = c.getComponentType().getName() + "-" + i;
-                c.init(accessor, name);
-            }
-        }
     }
 
     @Override
@@ -182,25 +181,16 @@ public class AircraftContraption extends Contraption {
 
             tag.put("components", componentList);
             tag.put("componentInfoMappings", componentInfoList);
-
-            tag.putString("aircraftId", aircraft.getUUID().toString());
-
-            BlockPos stationPosition = aircraft.getStationPosition();
-            CompoundTag stationPos = new CompoundTag();
-            stationPos.putInt("x", stationPosition.getX());
-            stationPos.putInt("y", stationPosition.getY());
-            stationPos.putInt("z", stationPosition.getZ());
-            tag.put("stationPosition", stationPos);
-
-            System.out.println("write -" + tag);
         }
+
+        // System.out.println("write -" + tag);
         return tag;
     }
 
     @Override
     public void readNBT(Level world, CompoundTag nbt, boolean spawnData) {
         super.readNBT(world, nbt, spawnData);
-        System.out.println("read - " + nbt);
+        // System.out.println("read - " + nbt);
 
         rotationMode = NBTHelper.readEnum(nbt, "RotationMode", EAircraftMovementMode.class);
 
@@ -237,18 +227,6 @@ public class AircraftContraption extends Contraption {
                 BlockPos blockPos = NbtUtils.readBlockPos(componentNbt.getCompound("pos"));
                 this.componentBlockInfoMap.put(name, blocks.get(blockPos));
             }
-
-            if (world instanceof ServerLevel level) {
-                aircraft = (AircraftEntity) level.getEntity(UUID.fromString(nbt.getString("aircraftId")));
-            }
-            CompoundTag stationPos = nbt.getCompound("stationPosition");
-            BlockPos stationPosition = new BlockPos(
-                    stationPos.getInt("x"),
-                    stationPos.getInt("y"),
-                    stationPos.getInt("z"));
-            AircraftStationTileEntity station = (AircraftStationTileEntity) world.getBlockEntity(stationPosition);
-            accessor = new AircraftAccessor(world, station.getPeripheral(), station, aircraft, this);
-            initComponents();
         }
     }
 
