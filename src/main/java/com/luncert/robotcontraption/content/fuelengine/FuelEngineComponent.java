@@ -8,7 +8,7 @@ import com.mrh0.createaddition.index.CAFluids;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
-import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -23,6 +23,7 @@ import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType
 public class FuelEngineComponent extends BaseAircraftComponent {
 
     private int powerLevel = 1;
+    private boolean active;
 
     @Override
     public AircraftComponentType getComponentType() {
@@ -32,7 +33,7 @@ public class FuelEngineComponent extends BaseAircraftComponent {
     @Override
     public void tickComponent() {
         final double newCapacity;
-        if (powerLevel > 0 && consumeFuel(true)) {
+        if (active && powerLevel > 0 && consumeFuel(true)) {
             consumeFuel(false);
             BlockState state = accessor.getComponentBlockState(name);
             Block block = state.getBlock();
@@ -76,13 +77,28 @@ public class FuelEngineComponent extends BaseAircraftComponent {
         this.powerLevel = powerLevel;
     }
 
+    @LuaFunction
+    public void turnOn() {
+        active = true;
+    }
+
+    @LuaFunction
+    public void turnOff() {
+        active = false;
+    }
+
     @Override
     public Tag writeNBT() {
-        return IntTag.valueOf(powerLevel);
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("powerLevel", powerLevel);
+        tag.putBoolean("active", active);
+        return tag;
     }
 
     @Override
     public void readNBT(Level world, Tag tag) {
-        powerLevel = ((IntTag) tag).getAsInt();
+        CompoundTag t = (CompoundTag) tag;
+        powerLevel = t.getInt("powerLevel");
+        active = t.getBoolean("active");
     }
 }

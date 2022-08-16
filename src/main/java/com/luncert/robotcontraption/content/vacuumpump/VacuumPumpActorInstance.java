@@ -13,13 +13,12 @@ import com.simibubi.create.content.contraptions.base.IRotate;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
 import com.simibubi.create.content.contraptions.components.structureMovement.render.ActorInstance;
 import com.simibubi.create.foundation.utility.AnimationTickHolder;
-import com.simibubi.create.foundation.utility.VecHelper;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+import static com.luncert.robotcontraption.util.Common.relative;
+import static com.luncert.robotcontraption.util.Common.toV3f;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING;
 
 public class VacuumPumpActorInstance extends ActorInstance {
@@ -27,7 +26,7 @@ public class VacuumPumpActorInstance extends ActorInstance {
     private final PoseStack stack = new PoseStack();
 
     protected final ModelData cogwheel;
-    protected final ModelData slider;
+    // protected final ModelData slider;
     protected final Direction direction;
 
     public VacuumPumpActorInstance(MaterialManager materialManager, VirtualRenderWorld world, MovementContext context) {
@@ -42,21 +41,21 @@ public class VacuumPumpActorInstance extends ActorInstance {
         cogwheel = mat
                 .getModel(RCBlockPartials.COGWHEEL_NO_SHAFT, blockState, direction)
                 .createInstance();
-        slider = mat.getModel(RCBlockPartials.VACUUM_PUMP_SLIDER, blockState, direction)
-                .createInstance();
+        // slider = mat.getModel(RCBlockPartials.VACUUM_PUMP_SLIDER, blockState, direction)
+        //         .createInstance();
 
         animeCogwheel();
-        animeSlider();
+        // animeSlider();
     }
 
     @Override
     public void beginFrame() {
         animeCogwheel();
-        animeSlider();
+        // animeSlider();
     }
 
     private Vec3 getInstancePosition() {
-        return Common.convert(context.localPos);
+        return Common.toV3(context.localPos);
     }
 
     private void animeCogwheel() {
@@ -66,12 +65,14 @@ public class VacuumPumpActorInstance extends ActorInstance {
         }
 
         stack.pushPose();
-        TransformStack.cast(stack)
+        TransformStack msr = TransformStack.cast(stack)
                 .centre()
                 .rotateY(axis == Direction.Axis.Z ? 90 : 0)
                 .rotateZ(axis.isHorizontal() ? 90 : 0)
                 .unCentre();
-        cogwheel.setTransform(stack);
+
+        msr.translate(relative(getInstancePosition(),
+                direction.getAxis(), direction.getAxisDirection().getStep() * -1f / 16 * 11));
 
         float speed = context.getAnimationSpeed();
         if (context.contraption.stalled)
@@ -79,9 +80,7 @@ public class VacuumPumpActorInstance extends ActorInstance {
         float time = AnimationTickHolder.getRenderTime(context.world) / 20;
         float angle = (time * speed) % 360;
         cogwheel.rotateCentered(Direction.get(Direction.AxisDirection.POSITIVE, Direction.Axis.Y), angle);
-
-        Vec3 baseOffset = getInstancePosition();
-        stack.translate(baseOffset.x, baseOffset.y, baseOffset.z);
+        cogwheel.setTransform(stack);
 
         cogwheel.setBlockLight(localBlockLight());
         stack.popPose();
@@ -93,13 +92,13 @@ public class VacuumPumpActorInstance extends ActorInstance {
 
         if (context.getAnimationSpeed() != 0) {
             double offset = VacuumPumpRenderer.calcSliderOffset(context.world, direction);
-            msr.translate(Common.relative(getInstancePosition(), direction.getAxis(), offset));
+            msr.translate(relative(getInstancePosition(), direction.getAxis(), offset));
         } else {
             msr.translate(getInstancePosition());
         }
 
         // msr.centre();
-        slider.setTransform(stack);
+        // slider.setTransform(stack);
 
         stack.popPose();
     }

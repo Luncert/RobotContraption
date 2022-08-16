@@ -79,7 +79,6 @@ public class RCBlocks {
             REGISTRATE.block("vacuum_pump", VacuumPumpBlock::new)
                     .initialProperties(SharedProperties::stone)
                     .properties(BlockBehaviour.Properties::noOcclusion)
-                    .addLayer(() -> RenderType::translucent)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
                     .onRegister(AllMovementBehaviours.movementBehaviour(new VacuumPumpMovementBehaviour()))
                     .item()

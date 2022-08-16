@@ -2,9 +2,11 @@ package com.luncert.robotcontraption.content.aircraftcontroller;
 
 import com.google.common.collect.ImmutableMap;
 import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
+import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
 import com.luncert.robotcontraption.compat.computercraft.AircraftApiCallback;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.content.aircraft.TickOrder;
+import com.luncert.robotcontraption.content.fuelengine.FuelEngineComponent;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
@@ -52,6 +54,20 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
     @Override
     public AircraftComponentType getComponentType() {
         return AIRCRAFT_CONTROLLER;
+    }
+
+    @LuaFunction
+    public final void turnOnGenerators() {
+        for (IAircraftComponent component : accessor.findAll("fuel-engine")) {
+            ((FuelEngineComponent) component).turnOn();
+        }
+    }
+
+    @LuaFunction
+    public final void turnOffGenerators() {
+        for (IAircraftComponent component : accessor.findAll("fuel-engine")) {
+            ((FuelEngineComponent) component).turnOff();
+        }
     }
 
     @LuaFunction

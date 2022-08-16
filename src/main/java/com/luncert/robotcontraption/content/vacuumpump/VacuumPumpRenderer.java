@@ -7,7 +7,6 @@ import com.luncert.robotcontraption.index.RCBlockPartials;
 import com.luncert.robotcontraption.util.Common;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.simibubi.create.content.contraptions.base.DirectionalKineticBlock;
 import com.simibubi.create.content.contraptions.base.IRotate;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.base.KineticTileEntityRenderer;
@@ -17,18 +16,16 @@ import com.simibubi.create.content.contraptions.components.structureMovement.ren
 import com.simibubi.create.foundation.render.CachedBufferer;
 import com.simibubi.create.foundation.render.SuperByteBuffer;
 import com.simibubi.create.foundation.utility.AnimationTickHolder;
-import com.simibubi.create.foundation.utility.VecHelper;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+import static com.luncert.robotcontraption.util.Common.relative;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING;
 
 public class VacuumPumpRenderer extends KineticTileEntityRenderer {
@@ -45,12 +42,12 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
         VertexConsumer vb = buffer.getBuffer(RenderType.cutoutMipped());
 
         int lightBehind = LevelRenderer.getLightColor(te.getLevel(), te.getBlockPos().relative(direction.getOpposite()));
-        int lightInFront = LevelRenderer.getLightColor(te.getLevel(), te.getBlockPos().relative(direction));
+        // int lightInFront = LevelRenderer.getLightColor(te.getLevel(), te.getBlockPos().relative(direction));
 
         SuperByteBuffer cogwheel =
                 CachedBufferer.partialFacing(RCBlockPartials.COGWHEEL_NO_SHAFT, te.getBlockState(), direction);
-        SuperByteBuffer slider =
-                CachedBufferer.partialFacing(RCBlockPartials.VACUUM_PUMP_SLIDER, te.getBlockState(), direction);
+        // SuperByteBuffer slider =
+        //         CachedBufferer.partialFacing(RCBlockPartials.VACUUM_PUMP_SLIDER, te.getBlockState(), direction);
 
         double offset = 0;
         if (te.getSpeed() != 0) {
@@ -58,7 +55,8 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
         }
 
         standardKineticRotationTransform(cogwheel, te, lightBehind).renderInto(ms, vb);
-        kineticTranslate(slider, te, direction.getAxis(), offset, lightInFront).renderInto(ms, vb);
+        // kineticTranslate(cogwheel, te, direction.getAxis(), offset, lightBehind).renderInto(ms, vb);
+        // kineticTranslate(slider, te, direction.getAxis(), offset, lightInFront).renderInto(ms, vb);
     }
 
     static double calcSliderOffset(Level world, Direction direction) {
@@ -70,7 +68,7 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
     private static SuperByteBuffer kineticTranslate(SuperByteBuffer buffer, KineticTileEntity te, Direction.Axis axis, double offset, int light) {
         buffer.light(light);
         buffer.rotateCentered(Direction.get(Direction.AxisDirection.POSITIVE, axis), 0);
-        buffer.translate(Common.relative(Common.convert(te.getBlockPos()), axis, offset));
+        buffer.translate(Common.relative(Common.toV3(te.getBlockPos()), axis, offset));
         return buffer;
     }
 
@@ -80,7 +78,7 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
         BlockState blockState = context.state;
         Direction direction = blockState.getValue(FACING);
 
-        Vec3 baseOffset = Common.convert(context.localPos);
+        Vec3 baseOffset = Common.toV3(context.localPos);
 
         float speed = context.getAnimationSpeed();
         if (context.contraption.stalled)
@@ -88,8 +86,8 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
 
         SuperByteBuffer cogwheel =
                 CachedBufferer.partialFacing(RCBlockPartials.COGWHEEL_NO_SHAFT, blockState, direction);
-        SuperByteBuffer slider =
-                CachedBufferer.partialFacing(RCBlockPartials.VACUUM_PUMP_SLIDER, blockState, direction);
+        // SuperByteBuffer slider =
+        //         CachedBufferer.partialFacing(RCBlockPartials.VACUUM_PUMP_SLIDER, blockState, direction);
 
         PoseStack m = matrices.getModel();
         m.pushPose();
@@ -103,28 +101,29 @@ public class VacuumPumpRenderer extends KineticTileEntityRenderer {
         float time = AnimationTickHolder.getRenderTime(context.world) / 20;
         float angle = (time * speed) % 360;
 
-        TransformStack.cast(m)
+        TransformStack msr = TransformStack.cast(m)
                 .centre()
                 .rotateY(axis == Direction.Axis.Z ? 90 : 0)
                 .rotateZ(axis.isHorizontal() ? 90 : 0)
                 .unCentre();
+        msr.translate(relative(baseOffset,
+                direction.getAxis(), direction.getAxisDirection().getStep() * -1f / 16 * 11));
         cogwheel.transform(m);
         cogwheel.rotateCentered(Direction.get(Direction.AxisDirection.POSITIVE, Direction.Axis.Y), angle);
         m.popPose();
 
-        m.translate(baseOffset.x, baseOffset.y, baseOffset.z);
         cogwheel.light(matrices.getWorld(), ContraptionRenderDispatcher.getContraptionWorldLight(context, renderWorld))
                 .renderInto(matrices.getViewProjection(), builder);
 
-        double sliderOffset = 0;
-        if (speed != 0) {
-            sliderOffset = calcSliderOffset(context.world, direction);
-        }
-        slider.transform(m);
-
-        slider.translate(Common.linear(axis, sliderOffset))
-                .light(matrices.getWorld(), ContraptionRenderDispatcher.getContraptionWorldLight(context, renderWorld))
-                .renderInto(matrices.getViewProjection(), builder);
+        // double sliderOffset = 0;
+        // if (speed != 0) {
+        //     sliderOffset = calcSliderOffset(context.world, direction);
+        // }
+        // slider.transform(m);
+        //
+        // slider.translate(Common.linear(axis, sliderOffset))
+        //         .light(matrices.getWorld(), ContraptionRenderDispatcher.getContraptionWorldLight(context, renderWorld))
+        //         .renderInto(matrices.getViewProjection(), builder);
         m.popPose();
     }
 }

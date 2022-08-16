@@ -71,12 +71,8 @@ public class AircraftContraption extends Contraption {
         return componentBlockInfoMap.get(name);
     }
 
-    public BlockPos getLocalPos(BlockPos pos) {
-        return pos.subtract(anchor);
-    }
-
     public BlockPos getWorldPos(BlockPos pos) {
-        return anchor.offset(pos.getX(), pos.getY(), pos.getZ());
+        return aircraft.blockPosition().offset(pos.getX(), pos.getY(), pos.getZ());
     }
 
     public void initComponents(Level level, AircraftEntity aircraft) {
@@ -170,7 +166,7 @@ public class AircraftContraption extends Contraption {
             return;
         }
 
-        BlockPos localPos = getLocalPos(pos);
+        BlockPos localPos = pos.subtract(anchor);
         LazyOptional<IAircraftComponent> opt = pair.getValue().getCapability(RCCapabilities.CAPABILITY_AIRCRAFT_COMPONENT);
         opt.ifPresent(c ->
                 components.compute(c.getComponentType().getName(), (k, v) -> {

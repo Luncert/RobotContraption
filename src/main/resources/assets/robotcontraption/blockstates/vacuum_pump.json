@@ -2,27 +2,27 @@
   "variants": {
     "facing=up": {
       "model": "robotcontraption:block/vacuum_pump",
-      "x": 90
+      "x": -90
     },
     "facing=down": {
       "model": "robotcontraption:block/vacuum_pump",
-      "x": -90
+      "x": 90
     },
     "facing=north": {
       "model": "robotcontraption:block/vacuum_pump",
-      "y": 180
+      "y": 0
     },
     "facing=south": {
       "model": "robotcontraption:block/vacuum_pump",
-      "y": 0
+      "y": 180
     },
     "facing=west": {
       "model": "robotcontraption:block/vacuum_pump",
-      "y": 90
+      "y": 270
     },
     "facing=east": {
       "model": "robotcontraption:block/vacuum_pump",
-      "y": 270
+      "y": 90
     }
   }
 }

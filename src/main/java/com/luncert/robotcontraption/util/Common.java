@@ -1,6 +1,6 @@
 package com.luncert.robotcontraption.util;
 
-import com.mojang.math.Vector3d;
+import com.mojang.math.Vector3f;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.material.Fluid;
@@ -13,6 +13,18 @@ import java.util.Objects;
 public class Common {
 
     private Common() {
+    }
+
+    public static Vector3f relative(Vector3f v, Direction.Axis axis, float delta) {
+        if (delta != 0) {
+            return switch (axis) {
+                case X -> new Vector3f(v.x() + delta, v.y(), v.z());
+                case Y -> new Vector3f(v.x(), v.y() + delta, v.z());
+                case Z -> new Vector3f(v.x(), v.y(), v.z() + delta);
+            };
+        }
+
+        return v;
     }
 
     public static Vec3 relative(Vec3 v, Direction.Axis axis, double delta) {
@@ -51,8 +63,16 @@ public class Common {
         };
     }
 
-    public static Vec3 convert(BlockPos blockPos) {
+    public static Vector3f toV3f(BlockPos blockPos) {
+        return new Vector3f(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+    }
+
+    public static Vec3 toV3(BlockPos blockPos) {
         return new Vec3(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+    }
+
+    public static BlockPos toPos(Vec3 p) {
+        return new BlockPos(p.x(), p.y(), p.z());
     }
 
     public static boolean compareFluidKinds(Fluid a, Fluid b) {
