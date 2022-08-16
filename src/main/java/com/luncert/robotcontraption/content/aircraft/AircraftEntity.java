@@ -356,7 +356,7 @@ public class AircraftEntity extends Entity {
 
         getContraption().ifPresent(contraption -> {
             contraption.initComponents(level, this);
-            for (List<IAircraftComponent> value : contraption.getComponents().values()) {
+            for (List<IAircraftComponent> value : contraption.getOrderedComponents()) {
                 for (IAircraftComponent component : value) {
                     component.tickComponent();
                 }
@@ -409,7 +409,7 @@ public class AircraftEntity extends Entity {
         if (isMoving && !level.isClientSide) {
             asyncCallbacks.remove().accept(true);
         }
-        actionCoolDown = 10;
+        actionCoolDown = 11;
         isMoving = false;
     }
 
@@ -450,7 +450,7 @@ public class AircraftEntity extends Entity {
     @Override
     protected void defineSynchedData() {
         entityData.clearDirty();
-        entityData.define(SPEED, 32);
+        entityData.define(SPEED, 0);
         entityData.define(TARGET_Y_ROT, 0f);
         entityData.define(TARGET_MOVEMENT, Optional.empty());
     }

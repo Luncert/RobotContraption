@@ -135,5 +135,10 @@ public class AircraftStationTileEntity extends KineticTileEntity {
                 aircraft.bindStation(this);
             }
         }
+
+        if (aircraft != null && aircraft.isRemoved()) {
+            aircraftId = null;
+            aircraft = null;
+        }
     }
 }

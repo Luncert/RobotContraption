@@ -123,6 +123,7 @@ public class RCBlocks {
                     .initialProperties(SharedProperties::stone)
                     .properties(BlockBehaviour.Properties::noOcclusion)
                     .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+                    .transform(BlockStressDefaults.setImpact(4d))
                     .transform(BlockDefaults.setThrust(16))
                     .simpleItem()
                     .register();

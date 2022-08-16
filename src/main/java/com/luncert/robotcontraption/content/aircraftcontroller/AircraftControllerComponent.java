@@ -4,12 +4,16 @@ import com.google.common.collect.ImmutableMap;
 import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.computercraft.AircraftApiCallback;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
+import com.luncert.robotcontraption.content.aircraft.TickOrder;
 import com.luncert.robotcontraption.exception.AircraftMovementException;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.lua.MethodResult;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Arrays;
@@ -18,15 +22,31 @@ import java.util.Map;
 import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType.AIRCRAFT_CONTROLLER;
 import static com.luncert.robotcontraption.compat.computercraft.AircraftActionEvent.EVENT_AIRCRAFT_MOVEMENT_DONE;
 
+@TickOrder(2)
 public class AircraftControllerComponent extends BaseAircraftComponent {
 
+    private int speed = 0;
+    private int maxSpeed = 256;
     private int executionId;
 
     @Override
     public void tickComponent() {
         double thrust = accessor.resources.getResource("thrust", 0d);
-        int speed = (int) (Mth.clamp(thrust / accessor.contraption.getBlocks().size(), 0, 1) * 256);
-        accessor.aircraft.setKineticSpeed(speed);
+        maxSpeed = (int) (Mth.clamp(thrust / accessor.contraption.getBlocks().size(), 0, 1) * 256);
+        if (speed > maxSpeed) {
+            speed = maxSpeed;
+            accessor.aircraft.setKineticSpeed(speed);
+        }
+    }
+
+    @Override
+    public Tag writeNBT() {
+        return IntTag.valueOf(speed);
+    }
+
+    @Override
+    public void readNBT(Level world, Tag tag) {
+        speed = ((IntTag) tag).getAsInt();
     }
 
     @Override
@@ -105,9 +125,19 @@ public class AircraftControllerComponent extends BaseAircraftComponent {
         return AircraftApiCallback.hook(executionId, EVENT_AIRCRAFT_MOVEMENT_DONE);
     }
 
-    @LuaFunction(mainThread = true)
+    @LuaFunction
+    public final void setSpeed(int speed) throws LuaException {
+        if (speed > maxSpeed) {
+            throw new LuaException("max speed is " + maxSpeed);
+        }
+
+        this.speed = speed;
+        accessor.aircraft.setKineticSpeed(speed);
+    }
+
+    @LuaFunction
     public final int getSpeed() {
-        return (int) (1d / accessor.aircraft.getMovementSpeed());
+        return speed;
     }
 
     @LuaFunction

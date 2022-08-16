@@ -1,12 +1,11 @@
 package com.luncert.robotcontraption.compat.create;
 
+import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.aircraft.AircraftAccessor;
 import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.compat.aircraft.IAircraftComponent;
-import com.luncert.robotcontraption.content.aircraft.AircraftEntity;
-import com.luncert.robotcontraption.content.aircraft.AircraftStationBlock;
-import com.luncert.robotcontraption.content.aircraft.AircraftStationTileEntity;
+import com.luncert.robotcontraption.content.aircraft.*;
 import com.luncert.robotcontraption.index.RCBlocks;
 import com.luncert.robotcontraption.index.RCCapabilities;
 import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
@@ -31,6 +30,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.luncert.robotcontraption.index.RCContraptionTypes.AIRCRAFT;
 
@@ -38,6 +38,7 @@ public class AircraftContraption extends Contraption {
 
     private final Map<String, List<IAircraftComponent>> components = new HashMap<>();
     private final Map<String, StructureBlockInfo> componentBlockInfoMap = new HashMap<>();
+    private List<List<String>> componentTickOrders;
     private AircraftEntity aircraft;
     private AircraftAccessor accessor;
 
@@ -56,6 +57,16 @@ public class AircraftContraption extends Contraption {
         return components;
     }
 
+    public List<List<IAircraftComponent>> getOrderedComponents() {
+        return componentTickOrders.stream().map(componentTypes -> {
+            List<IAircraftComponent> c = new ArrayList<>();
+            for (String componentType : componentTypes) {
+                c.addAll(components.get(componentType));
+            }
+            return c;
+        }).collect(Collectors.toList());
+    }
+
     public StructureBlockInfo getComponentBlockInfo(String name) {
         return componentBlockInfoMap.get(name);
     }
@@ -69,21 +80,45 @@ public class AircraftContraption extends Contraption {
     }
 
     public void initComponents(Level level, AircraftEntity aircraft) {
-        if (accessor != null) {
-            return;
-        }
-        this.aircraft = aircraft;
-        AircraftStationTileEntity station = (AircraftStationTileEntity) level.getBlockEntity(aircraft.getStationPosition());
-        accessor = new AircraftAccessor(level, station.getPeripheral(), station, aircraft, this);
+        if (accessor == null) {
+            this.aircraft = aircraft;
+            AircraftStationTileEntity station = (AircraftStationTileEntity) level.getBlockEntity(aircraft.getStationPosition());
+            accessor = new AircraftAccessor(level, station.getPeripheral(), station, aircraft, this);
 
-        for (Map.Entry<String, List<IAircraftComponent>> entry : getComponents().entrySet()) {
-            List<IAircraftComponent> components = entry.getValue();
-            for (int i = 0; i < components.size(); i++) {
-                IAircraftComponent c = components.get(i);
-                String name = c.getComponentType().getName() + "-" + i;
-                c.init(accessor, name);
+            Map<Integer, List<String>> tickOrders = new HashMap<>();
+
+            for (Map.Entry<String, List<IAircraftComponent>> entry : components.entrySet()) {
+                List<IAircraftComponent> components = entry.getValue();
+                for (int i = 0; i < components.size(); i++) {
+                    IAircraftComponent c = components.get(i);
+                    String name = c.getComponentType().getName() + "-" + i;
+                    c.init(accessor, name);
+                }
+
+                Class<? extends IAircraftComponent> type = components.get(0).getClass();
+                int order = 0;
+                if (type.isAnnotationPresent(TickOrder.class)) {
+                    TickOrder tickOrder = type.getAnnotation(TickOrder.class);
+                    order = tickOrder.value();
+                }
+
+                tickOrders.compute(order, (k, v) -> {
+                    if (v == null) {
+                        v = new LinkedList<>();
+                    }
+                    v.add(entry.getKey());
+                    return v;
+                });
             }
+
+            componentTickOrders = tickOrders.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(Map.Entry::getValue)
+                    .collect(Collectors.toList());
+            RobotContraption.LOGGER.info("components order {}", componentTickOrders);
         }
+
+        accessor.resources.clear();
     }
 
     @Override
@@ -217,7 +252,7 @@ public class AircraftContraption extends Contraption {
                     v.add(null);
                 }
                 IAircraftComponent component = AircraftComponentType.createComponent(componentType);
-                component.readNBT(world, componentNbt.getCompound("component"));
+                component.readNBT(world, componentNbt.get("component"));
 
                 v.set(componentId, component);
                 return v;

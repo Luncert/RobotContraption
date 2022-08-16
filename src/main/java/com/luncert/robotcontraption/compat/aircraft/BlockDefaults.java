@@ -16,6 +16,11 @@ public class BlockDefaults {
         DEFAULT_TRUSTS.put(blockId, thrust);
     }
 
+    public static double getDefaultThrust(ResourceLocation blockId) {
+        Double t = DEFAULT_TRUSTS.get(blockId);
+        return t == null ? 0 : t;
+    }
+
     public static <B extends Block, P> NonNullUnaryOperator<BlockBuilder<B, P>> setThrust(double impact) {
         return (b) -> {
             setDefaultThrust(new ResourceLocation(b.getOwner().getModid(), b.getName()), impact);

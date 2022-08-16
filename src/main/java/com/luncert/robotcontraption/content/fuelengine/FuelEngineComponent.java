@@ -1,16 +1,14 @@
 package com.luncert.robotcontraption.content.fuelengine;
 
+import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
-import com.luncert.robotcontraption.content.blockreader.BlockReaderComponent;
 import com.luncert.robotcontraption.util.Common;
 import com.mrh0.createaddition.index.CAFluids;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -43,16 +41,15 @@ public class FuelEngineComponent extends BaseAircraftComponent {
         } else {
             newCapacity = 0;
         }
+        RobotContraption.LOGGER.info("gen {}", newCapacity);
 
         accessor.resources.updateResource("capacity", 0d, old -> old + newCapacity);
     }
 
     private boolean consumeFuel(boolean simulate) {
-        return accessor.aircraft.getContraption().map(contraption -> {
-            IFluidHandler fluidTanks = contraption.getSharedFluidTanks();
-            return tryToDrain(fluidTanks, CAFluids.SEED_OIL.get(), simulate)
-                    || tryToDrain(fluidTanks, CAFluids.BIOETHANOL.get(), simulate);
-        }).orElse(false);
+        IFluidHandler fluidTanks = accessor.contraption.getSharedFluidTanks();
+        return tryToDrain(fluidTanks, CAFluids.SEED_OIL.get().getSource(), simulate)
+                || tryToDrain(fluidTanks, CAFluids.BIOETHANOL.get().getSource(), simulate);
     }
 
     private boolean tryToDrain(IFluidHandler fluidTanks, Fluid fluid, boolean simulate) {

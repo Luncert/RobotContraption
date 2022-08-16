@@ -43,4 +43,8 @@ public class AircraftContextResources {
         Object v = resourceMap.get(name);
         return v == null ? defaultValue : (T) v;
     }
+
+    public void clear() {
+        resourceMap.clear();
+    }
 }

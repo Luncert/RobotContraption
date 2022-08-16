@@ -1,8 +1,10 @@
 package com.luncert.robotcontraption.content.jetengine;
 
+import com.luncert.robotcontraption.RobotContraption;
 import com.luncert.robotcontraption.compat.aircraft.AircraftComponentType;
 import com.luncert.robotcontraption.compat.aircraft.BaseAircraftComponent;
 import com.luncert.robotcontraption.compat.aircraft.BlockDefaults;
+import com.luncert.robotcontraption.content.aircraft.TickOrder;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
@@ -14,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import static com.luncert.robotcontraption.compat.aircraft.AircraftComponentType.JET_ENGINE;
 
+@TickOrder(1)
 public class JetEngineComponent extends BaseAircraftComponent {
 
 
@@ -27,17 +30,19 @@ public class JetEngineComponent extends BaseAircraftComponent {
     @Override
     public void tickComponent() {
         if (powerLevel > 0) {
-            double capacity = accessor.resources.getResource("capacity", 0);
+            double capacity = accessor.resources.getResource("capacity", 0d);
             BlockState state = accessor.getComponentBlockState(name);
             Block block = state.getBlock();
             Double impact = BlockStressDefaults.DEFAULT_IMPACTS.get(block.getRegistryName());
             double requiredCapacity = impact * powerLevel * powerLevel;
 
+            RobotContraption.LOGGER.info("{} required, got {}", requiredCapacity, capacity);
             if (requiredCapacity <= capacity) {
                 // consume capacity
                 accessor.resources.updateResource("capacity", capacity - requiredCapacity);
                 // generate thrust
-                double thrust = powerLevel * BlockDefaults.DEFAULT_TRUSTS.get(block.getRegistryName());
+                double thrust = powerLevel * BlockDefaults.getDefaultThrust(block.getRegistryName());
+                RobotContraption.LOGGER.info("thrust {}", thrust);
                 accessor.resources.updateResource("thrust", 0d, old -> old + thrust);
             }
         }
